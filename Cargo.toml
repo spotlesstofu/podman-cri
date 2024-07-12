@@ -10,7 +10,7 @@ tokio = { version = "1.38.0", features = ["rt-multi-thread"] }
 prost = "0.12.6"
 tonic = "0.11.0"
 serde_json = "1.0.117"
-podman-openapi = { path = "/var/home/tofu/code/podman-openapi" }
+podman-api = { path = "podman-api" }
 
 [build-dependencies]
 tonic-build = "0.11.0"

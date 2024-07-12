@@ -72,7 +72,25 @@ socat TCP4-LISTEN:8000,reuseaddr,fork UNIX:/run/crio/crio.sock
 
 Generate Rust code from the OpenAPI spec:
 ```
-podman run --rm -v $(pwd):/workspace:z openapitools/openapi-generator-cli generate -i /workspace/podman-peerpods/swagger-latest.yaml -g rust-axum -o /workspace/podman-openapi --additional-properties=disableValidator=true,packageName=podman-openapi --skip-validate-spec
+podman run --rm -v $(pwd):/workspace:z openapitools/openapi-generator-cli generate -i /workspace/podman-peerpods/swagger-latest.yaml -g rust-axum -o /workspace/podman-api --additional-properties=disableValidator=true,packageName=podman-api --skip-validate-spec
+```
+
+Patch models to fix missing type:
+```
+diff --git a/podman-api/src/models.rs b/podman-api/src/models.rs
+index 1af1dde..d58b6b2 100644
+--- a/src/models.rs
++++ b/src/models.rs
+@@ -3,6 +3,9 @@
+ use http::HeaderValue;
+ use validator::Validate;
+
++// TODO this is a workaround for cargo error[E0412]: cannot find type `integer` in this scope
++/// synonym of u32
++type integer = u32;
+
+ #[cfg(feature = "server")]
+ use crate::header;
 ```
 
 # Podman machine

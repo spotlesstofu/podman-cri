@@ -7,7 +7,7 @@ use axum::{
 
 use tonic::{transport::Channel, Request};
 
-use podman_openapi::models::{
+use podman_api::models::{
     Container, ContainerCreateResponse, ContainerJson, CreateContainerConfig, IdResponse,
     ListContainer, ListPodsReport, PodRmReport, PodStartReport, PodStopReport,
 };
