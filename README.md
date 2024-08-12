@@ -52,7 +52,7 @@ Proto files sources:
 - protoc
 - protobuf-devel
 
-# Development
+# Development utils
 
 Inspect Podman API calls:
 ```command
@@ -60,14 +60,6 @@ $ podman system info | grep podman.sock
 path: /run/user/1000/podman/podman.sock
 $ mv /run/user/1000/podman/podman.sock /run/user/1000/podman/podman2.sock
 $ socat -t100 -v UNIX-LISTEN:/run/user/1000/podman/podman.sock,mode=777,reuseaddr,fork UNIX-CONNECT:/run/user/1000/podman/podman2.sock 2>&1 | grep -E 'GET|PUT|POST|DELETE'
-```
-
-Forward Unix to TCP socket.
-
-Won't be needed when I implement this: https://github.com/hyperium/tonic/issues/1732.
-
-```bash
-socat TCP4-LISTEN:8000,reuseaddr,fork UNIX:/run/crio/crio.sock
 ```
 
 Generate Rust code from the OpenAPI spec:

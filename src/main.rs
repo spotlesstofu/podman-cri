@@ -41,10 +41,24 @@ async fn main() {
     axum::serve(listener, app).await.unwrap();
 }
 
-async fn get_client() -> RuntimeServiceClient<Channel> {
-    // TODO let crio = std::env::var("CRIO").unwrap();
-    let crio = "http://localhost:8000";
-    RuntimeServiceClient::connect(crio).await.unwrap()
+/// Get a client to connect to a CRI server (for example, CRI-O).
+async fn get_client() -> Result<RuntimeServiceClient<Channel>, Box<dyn std::error::Error>> {
+    // We will ignore the http uri and connect to the Unix socket.
+    let channel = tonic::transport::Endpoint::try_from("http://[::]:50051")?
+        .connect_with_connector(tower::service_fn(|_: tonic::transport::Uri| {
+            let path = match std::env::var("CONTAINER_RUNTIME_ENDPOINT") {
+                Ok(val) => val,
+                Err(err) => {
+                    eprintln!("Error while reading CONTAINER_RUNTIME_ENDPOINT, using default. {err}");
+                    "/run/crio/crio.sock".to_string()
+                },
+            };
+            tokio::net::UnixStream::connect(path)
+        }))
+        .await?;
+
+    let client = RuntimeServiceClient::new(channel);
+    Ok(client)
 }
 
 impl From<cri::Container> for Container {
@@ -110,7 +124,7 @@ impl From<cri::Container> for ContainerJson {
 async fn container_list() -> Json<Vec<Container>> {
     let client = get_client();
     let request = Request::new(cri::ListContainersRequest::default());
-    let response = client.await.list_containers(request).await.unwrap();
+    let response = client.await.unwrap().list_containers(request).await.unwrap();
     let cri_containers = response.into_inner().containers;
     let podman_containers: Vec<Container> = cri_containers
         .into_iter()
@@ -129,7 +143,7 @@ async fn container_inspect(Path(name): Path<String>) -> Result<Json<ContainerJso
         filter: Some(filter),
     };
     let request = Request::new(message);
-    let response = client.await.list_containers(request).await.unwrap();
+    let response = client.await.unwrap().list_containers(request).await.unwrap();
     let cri_container: Option<cri::Container> = response.into_inner().containers.pop();
     match cri_container {
         Some(cri_container) => {
@@ -166,7 +180,13 @@ async fn container_create_libpod(
     };
     // TODO
     let request = Request::new(message);
-    let response = client.await.create_container(request).await.unwrap().into_inner();
+    let response = client
+        .await
+        .unwrap()
+        .create_container(request)
+        .await
+        .unwrap()
+        .into_inner();
     let id = response.container_id;
     let warnings = Vec::new();
     let response = ContainerCreateResponse::new(id, warnings);
