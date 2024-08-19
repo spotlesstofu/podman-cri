@@ -187,10 +187,47 @@ async fn container_create_libpod(
 ) -> Json<ContainerCreateResponse> {
     let client = get_client();
     let message = cri::CreateContainerRequest {
-        // TODO
-        ..Default::default()
+        pod_sandbox_id: "default".to_string(), // Assuming a default pod sandbox ID
+        config: Some(cri::ContainerConfig {
+            metadata: None,
+            image: Some(cri::ImageSpec {
+                // Assuming the image name is the same as the container name
+                image: payload.name.clone(),
+                ..Default::default()
+            }),
+            command: payload.body.cmd.unwrap_or_default(),
+            args: payload.body.entrypoint.unwrap_or_default(),
+            working_dir: payload.body.working_dir.unwrap_or_default(),
+            envs: payload
+                .body
+                .env
+                .unwrap_or_default()
+                .into_iter()
+                .map(|env| cri::KeyValue {
+                    key: env.clone(),
+                    value: env,
+                })
+                .collect(),
+            mounts: Vec::new(),
+            devices: Vec::new(),
+            labels: payload
+                .body
+                .labels
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(key, value)| (key, value))
+                .collect(),
+            annotations: std::collections::HashMap::new(),
+            log_path: format!("{}-log.log", payload.name),
+            stdin: payload.body.open_stdin.unwrap_or(false),
+            stdin_once: payload.body.stdin_once.unwrap_or(false),
+            tty: payload.body.tty.unwrap_or(false),
+            linux: None,
+            windows: None,
+            cdi_devices: Vec::new(),
+        }),
+        sandbox_config: None,
     };
-    // TODO
     let request = Request::new(message);
     let response = client
         .await
