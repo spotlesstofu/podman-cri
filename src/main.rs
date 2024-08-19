@@ -18,7 +18,6 @@ mod cri {
 
 use cri::runtime_service_client::RuntimeServiceClient;
 
-use chrono;
 
 
 pub mod proxy;
@@ -55,9 +54,11 @@ async fn get_client() -> Result<RuntimeServiceClient<Channel>, Box<dyn std::erro
             let path = match std::env::var("CONTAINER_RUNTIME_ENDPOINT") {
                 Ok(val) => val,
                 Err(err) => {
-                    eprintln!("Error while reading CONTAINER_RUNTIME_ENDPOINT, using default. {err}");
+                    eprintln!(
+                        "Error while reading CONTAINER_RUNTIME_ENDPOINT, using default. {err}"
+                    );
                     "/run/crio/crio.sock".to_string()
-                },
+                }
             };
             tokio::net::UnixStream::connect(path)
         }))
@@ -96,18 +97,28 @@ impl From<cri::Container> for ListContainer {
             image_id: Some(container.image_id),
             created: chrono::DateTime::from_timestamp(container.created_at / 1_000_000, 0),
             created_at: Some(container.created_at.to_string()),
-            state: Some(cri::ContainerState::try_from(container.state).unwrap().as_str_name().to_lowercase().replace("_", " ")),
+            state: Some(
+                cri::ContainerState::try_from(container.state)
+                    .unwrap()
+                    .as_str_name()
+                    .to_lowercase()
+                    .replace("_", " "),
+            ),
             labels: Some(container.labels),
             ..Default::default()
         }
     }
 }
 
-
 async fn container_list() -> Json<Vec<Container>> {
     let client = get_client();
     let request = Request::new(cri::ListContainersRequest::default());
-    let response = client.await.unwrap().list_containers(request).await.unwrap();
+    let response = client
+        .await
+        .unwrap()
+        .list_containers(request)
+        .await
+        .unwrap();
     let cri_containers = response.into_inner().containers;
     let podman_containers: Vec<Container> = cri_containers
         .into_iter()
@@ -126,7 +137,12 @@ async fn container_inspect(Path(name): Path<String>) -> Result<Json<ContainerJso
         filter: Some(filter),
     };
     let request = Request::new(message);
-    let response = client.await.unwrap().list_containers(request).await.unwrap();
+    let response = client
+        .await
+        .unwrap()
+        .list_containers(request)
+        .await
+        .unwrap();
     let cri_container: Option<cri::Container> = response.into_inner().containers.pop();
     match cri_container {
         Some(cri_container) => {
@@ -145,7 +161,12 @@ async fn container_stop() -> StatusCode {
 async fn container_list_libpod() -> Json<Vec<ListContainer>> {
     let client = get_client();
     let request = Request::new(cri::ListContainersRequest::default());
-    let response = client.await.unwrap().list_containers(request).await.unwrap();
+    let response = client
+        .await
+        .unwrap()
+        .list_containers(request)
+        .await
+        .unwrap();
     let cri_containers = response.into_inner().containers;
     let podman_containers: Vec<ListContainer> = cri_containers
         .into_iter()
@@ -153,7 +174,6 @@ async fn container_list_libpod() -> Json<Vec<ListContainer>> {
         .collect();
     Json(podman_containers)
 }
-
 
 #[derive(serde::Deserialize)]
 struct ContainerCreatePayload {
