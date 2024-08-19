@@ -181,7 +181,7 @@ struct ContainerCreatePayload {
     body: CreateContainerConfig,
 }
 
-/// POST /libpod/containers/create
+/// container_create_libpod responds to `POST /libpod/containers/create`.
 async fn container_create_libpod(
     Json(payload): Json<ContainerCreatePayload>,
 ) -> Json<ContainerCreateResponse> {
@@ -242,11 +242,13 @@ async fn container_create_libpod(
     Json(response)
 }
 
+
+/// pod_list_libpod responds to `GET /libpod/pods/json`.
 async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
     Json(vec![ListPodsReport::new()])
 }
 
-// POST
+/// pod_create_libpod responds to POST `/libpod/pods/create`.
 async fn pod_create_libpod() -> Json<IdResponse> {
     let client = get_client();
     // TODO let message =
@@ -255,16 +257,17 @@ async fn pod_create_libpod() -> Json<IdResponse> {
     Json(response)
 }
 
-// POST
+/// pod_start_libpod responds to POST `/libpod/pods/:name/start`.
 async fn pod_start_libpod() -> Json<PodStartReport> {
     Json(PodStartReport::new())
 }
 
-// POST
+/// pod_stop_libpod responds to POST `/libpod/pods/:name/stop`.
 async fn pod_stop_libpod() -> Json<PodStopReport> {
     Json(PodStopReport::new())
 }
 
+/// pod_delete_libpod responds to DELETE `/libpod/pods/:name`.
 async fn pod_delete_libpod() -> Json<PodRmReport> {
     Json(PodRmReport::new())
 }
