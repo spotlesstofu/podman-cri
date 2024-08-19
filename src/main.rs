@@ -215,7 +215,6 @@ async fn container_create_libpod(
                 .labels
                 .unwrap_or_default()
                 .into_iter()
-                .map(|(key, value)| (key, value))
                 .collect(),
             annotations: std::collections::HashMap::new(),
             log_path: format!("{}-log.log", payload.name),
