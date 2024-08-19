@@ -9,7 +9,7 @@ use tonic::{transport::Channel, Request};
 
 use podman_api::models::{
     Container, ContainerCreateResponse, ContainerJson, CreateContainerConfig, IdResponse,
-    ListContainer, ListPodsReport, PodRmReport, PodStartReport, PodStopReport,
+    ListContainer, ListPodsReport, PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport,
 };
 
 mod cri {
@@ -287,10 +287,47 @@ async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
 }
 
 /// pod_create_libpod responds to POST `/libpod/pods/create`.
-async fn pod_create_libpod() -> Json<IdResponse> {
+async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> Json<IdResponse> {
     let client = get_client();
-    // TODO let message =
-    let id = "".to_string();
+    let pod_sandbox_config = cri::PodSandboxConfig {
+        metadata: Some(cri::PodSandboxMetadata {
+            name: payload.name.unwrap_or_default(),
+            uid: "".to_string(),
+            namespace: "".to_string(),
+            attempt: 0,
+        }),
+        hostname: payload.hostname.unwrap_or_default(),
+        log_directory: "".to_string(),
+        dns_config: None,
+        port_mappings: Vec::new(),
+        labels: payload
+            .labels
+            .unwrap_or_default()
+            .into_iter()
+            .collect(),
+        annotations: std::collections::HashMap::new(),
+        linux: Some(cri::LinuxPodSandboxConfig {
+            cgroup_parent: payload.cgroup_parent.unwrap_or_default(),
+            security_context: None,
+            sysctls: std::collections::HashMap::new(),
+            overhead: None,
+            resources: None,
+        }),
+        windows: None,
+    };
+    let message = cri::RunPodSandboxRequest {
+        config: Some(pod_sandbox_config),
+        runtime_handler: "runc".to_string(),
+    };
+    let request = Request::new(message);
+    let response = client
+        .await
+        .unwrap()
+        .run_pod_sandbox(request)
+        .await
+        .unwrap()
+        .into_inner();
+    let id = response.pod_sandbox_id;
     let response = IdResponse::new(id);
     Json(response)
 }
