@@ -70,26 +70,12 @@ async fn get_client() -> Result<RuntimeServiceClient<Channel>, Box<dyn std::erro
 impl From<cri::Container> for Container {
     fn from(value: cri::Container) -> Self {
         Container {
-            command: None,
-            config: None,
             created: Some(value.created_at),
-            default_read_only_non_recursive: None,
-            host_config: None,
             id: Some(value.id),
             image: Some(value.image_ref),
             image_id: Some(value.image_id),
             labels: Some(value.labels),
-            mounts: None,
-            name: None,
-            names: None,
-            network_settings: None,
-            networking_config: None,
-            platform: None,
-            ports: None,
-            size_root_fs: None,
-            size_rw: None,
-            state: None,
-            status: None,
+            ..Default::default()
         }
     }
 }
@@ -97,32 +83,7 @@ impl From<cri::Container> for Container {
 impl From<cri::Container> for ContainerJson {
     fn from(value: cri::Container) -> Self {
         ContainerJson {
-            app_armor_profile: None,
-            args: None,
-            config: None,
-            created: None,
-            driver: None,
-            exec_ids: None,
-            graph_driver: None,
-            host_config: None,
-            hostname_path: None,
-            hosts_path: None,
-            id: None,
-            image: None,
-            log_path: None,
-            mount_label: None,
-            mounts: None,
-            name: None,
-            network_settings: None,
-            node: None,
-            path: None,
-            platform: None,
-            process_label: None,
-            resolv_conf_path: None,
-            restart_count: None,
-            size_root_fs: None,
-            size_rw: None,
-            state: None,
+            ..Default::default()
         }
     }
 }

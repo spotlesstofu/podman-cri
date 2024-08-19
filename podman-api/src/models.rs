@@ -6070,7 +6070,7 @@ impl std::ops::DerefMut for Consistency {
 
 
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate, Default)]
 #[cfg_attr(feature = "conversion", derive(frunk::LabelledGeneric))]
 pub struct Container {
     #[serde(rename = "Command")]
@@ -7956,7 +7956,7 @@ impl std::convert::TryFrom<HeaderValue> for header::IntoHeaderValue<ContainerHea
 
 
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate, Default)]
 #[cfg_attr(feature = "conversion", derive(frunk::LabelledGeneric))]
 pub struct ContainerJson {
     #[serde(rename = "AppArmorProfile")]
