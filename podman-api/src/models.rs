@@ -35547,7 +35547,7 @@ impl std::convert::TryFrom<HeaderValue> for header::IntoHeaderValue<LinuxWeightD
 
 
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate, Default)]
 #[cfg_attr(feature = "conversion", derive(frunk::LabelledGeneric))]
 pub struct ListContainer {
 /// AutoRemove

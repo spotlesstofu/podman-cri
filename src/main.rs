@@ -18,6 +18,9 @@ mod cri {
 
 use cri::runtime_service_client::RuntimeServiceClient;
 
+use chrono;
+
+
 pub mod proxy;
 use crate::proxy::reverse_proxy;
 
@@ -124,6 +127,22 @@ impl From<cri::Container> for ContainerJson {
     }
 }
 
+impl From<cri::Container> for ListContainer {
+    fn from(container: cri::Container) -> Self {
+        ListContainer {
+            id: Some(container.id),
+            image: Some(container.image_ref),
+            image_id: Some(container.image_id),
+            created: chrono::DateTime::from_timestamp(container.created_at / 1_000_000, 0),
+            created_at: Some(container.created_at.to_string()),
+            state: Some(cri::ContainerState::try_from(container.state).unwrap().as_str_name().to_lowercase().replace("_", " ")),
+            labels: Some(container.labels),
+            ..Default::default()
+        }
+    }
+}
+
+
 async fn container_list() -> Json<Vec<Container>> {
     let client = get_client();
     let request = Request::new(cri::ListContainersRequest::default());
@@ -163,8 +182,17 @@ async fn container_stop() -> StatusCode {
 }
 
 async fn container_list_libpod() -> Json<Vec<ListContainer>> {
-    Json(vec![ListContainer::new()])
+    let client = get_client();
+    let request = Request::new(cri::ListContainersRequest::default());
+    let response = client.await.unwrap().list_containers(request).await.unwrap();
+    let cri_containers = response.into_inner().containers;
+    let podman_containers: Vec<ListContainer> = cri_containers
+        .into_iter()
+        .map(|item: cri::Container| -> ListContainer { item.into() })
+        .collect();
+    Json(podman_containers)
 }
+
 
 #[derive(serde::Deserialize)]
 struct ContainerCreatePayload {
