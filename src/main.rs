@@ -18,6 +18,9 @@ mod cri {
 
 use cri::runtime_service_client::RuntimeServiceClient;
 
+pub mod proxy;
+use crate::proxy::reverse_proxy;
+
 #[tokio::main]
 async fn main() {
     let app = Router::new()
@@ -35,7 +38,7 @@ async fn main() {
         .route("/libpod/pods/:name/stop", post(pod_stop_libpod))
         .route("/libpod/pods/:name", delete(pod_delete_libpod))
         // forward to podman all the non-matching paths
-        .fallback(podman_passthrough);
+        .fallback(reverse_proxy);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
@@ -218,8 +221,4 @@ async fn pod_stop_libpod() -> Json<PodStopReport> {
 
 async fn pod_delete_libpod() -> Json<PodRmReport> {
     Json(PodRmReport::new())
-}
-
-async fn podman_passthrough() -> StatusCode {
-    StatusCode::NOT_IMPLEMENTED
 }

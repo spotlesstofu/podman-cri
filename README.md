@@ -15,6 +15,11 @@ Image build will be supported by proxying requests to Podman and then copying th
 
 What is the Podman API? See https://docs.podman.io/en/latest/_static/api.html.
 
+Podman usually listens on:
+```
+/run/user/1000/podman/podman.sock
+```
+
 OpenAPI source:
 - https://storage.googleapis.com/libpod-master-releases/swagger-latest.yaml
 
@@ -41,6 +46,11 @@ POST /libpod/pods/create
 ## CRI API
 
 What is the CRI API? See https://kubernetes.io/docs/concepts/architecture/cri/.
+
+CRI-O usually listens on:
+```
+/run/crio/crio.sock
+```
 
 Proto files sources:
 - https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/cri-api/pkg/apis/runtime/v1/api.proto
