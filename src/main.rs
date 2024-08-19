@@ -242,10 +242,48 @@ async fn container_create_libpod(
     Json(response)
 }
 
-
 /// pod_list_libpod responds to `GET /libpod/pods/json`.
 async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
-    Json(vec![ListPodsReport::new()])
+    let client = get_client();
+    let request = cri::ListPodSandboxRequest::default();
+    let response = client
+        .await
+        .unwrap()
+        .list_pod_sandbox(request)
+        .await
+        .unwrap();
+    let cri_pods = response.into_inner().items;
+
+    let podman_pods: Vec<ListPodsReport> = cri_pods
+        .into_iter()
+        .map(|pod_sandbox| {
+            let mut pod_report = ListPodsReport::new();
+            pod_report.id = Some(pod_sandbox.id);
+            pod_report.name = Some(
+                pod_sandbox
+                    .metadata
+                    .as_ref()
+                    .map(|m| m.name.clone())
+                    .unwrap_or_default(),
+            );
+            pod_report.namespace = Some(
+                pod_sandbox
+                    .metadata
+                    .as_ref()
+                    .map(|m| m.namespace.clone())
+                    .unwrap_or_default(),
+            );
+            pod_report.status = Some(
+                match cri::PodSandboxState::try_from(pod_sandbox.state).unwrap() {
+                    cri::PodSandboxState::SandboxReady => "Ready".to_string(),
+                    cri::PodSandboxState::SandboxNotready => "NotReady".to_string(),
+                },
+            );
+            pod_report
+        })
+        .collect();
+
+    Json(podman_pods)
 }
 
 /// pod_create_libpod responds to POST `/libpod/pods/create`.
