@@ -1,6 +1,10 @@
 use axum::{extract::Path, http::StatusCode, Json};
+use tokio::net::UnixStream;
 
-use tonic::{transport::Channel, Request};
+use tonic::{
+    transport::{Channel, Endpoint, Uri},
+    Request,
+};
 
 mod cri {
     tonic::include_proto!("runtime.v1");
@@ -16,8 +20,8 @@ use podman_api::models::{
 /// Get a client to connect to a CRI server (for example, CRI-O).
 async fn get_client() -> Result<RuntimeServiceClient<Channel>, Box<dyn std::error::Error>> {
     // We will ignore the http uri and connect to the Unix socket.
-    let channel = tonic::transport::Endpoint::try_from("http://[::]:50051")?
-        .connect_with_connector(tower::service_fn(|_: tonic::transport::Uri| {
+    let channel = Endpoint::try_from("http://[::]:50051")?
+        .connect_with_connector(tower::service_fn(|_: Uri| {
             let path = match std::env::var("CONTAINER_RUNTIME_ENDPOINT") {
                 Ok(val) => val,
                 Err(err) => {
@@ -27,7 +31,7 @@ async fn get_client() -> Result<RuntimeServiceClient<Channel>, Box<dyn std::erro
                     "/run/crio/crio.sock".to_string()
                 }
             };
-            tokio::net::UnixStream::connect(path)
+            UnixStream::connect(path)
         }))
         .await?;
 
