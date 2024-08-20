@@ -299,11 +299,7 @@ async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> Json<IdResp
         log_directory: "".to_string(),
         dns_config: None,
         port_mappings: Vec::new(),
-        labels: payload
-            .labels
-            .unwrap_or_default()
-            .into_iter()
-            .collect(),
+        labels: payload.labels.unwrap_or_default().into_iter().collect(),
         annotations: std::collections::HashMap::new(),
         linux: Some(cri::LinuxPodSandboxConfig {
             cgroup_parent: payload.cgroup_parent.unwrap_or_default(),
@@ -332,16 +328,55 @@ async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> Json<IdResp
 }
 
 /// pod_start_libpod responds to POST `/libpod/pods/:name/start`.
-async fn pod_start_libpod() -> Json<PodStartReport> {
-    Json(PodStartReport::new())
+///
+/// Returns a valid response but does nothing.
+///
+/// TODO What CRI call(s) (`rpc`) should I map this to?
+async fn pod_start_libpod(Path(name): Path<String>) -> Json<PodStartReport> {
+    let report = PodStartReport {
+        id: Some(name),
+        ..Default::default()
+    };
+
+    Json(report)
 }
 
 /// pod_stop_libpod responds to POST `/libpod/pods/:name/stop`.
-async fn pod_stop_libpod() -> Json<PodStopReport> {
-    Json(PodStopReport::new())
+async fn pod_stop_libpod(Path(name): Path<String>) -> Json<PodStopReport> {
+    let client = get_client();
+    let request = Request::new(cri::StopPodSandboxRequest {
+        pod_sandbox_id: name.clone(),
+    });
+    let _response = client
+        .await
+        .unwrap()
+        .stop_pod_sandbox(request)
+        .await
+        .unwrap()
+        .into_inner();
+    let report = PodStopReport {
+        id: Some(name),
+        ..Default::default()
+    };
+    Json(report)
 }
 
 /// pod_delete_libpod responds to DELETE `/libpod/pods/:name`.
-async fn pod_delete_libpod() -> Json<PodRmReport> {
-    Json(PodRmReport::new())
+async fn pod_delete_libpod(Path(name): Path<String>) -> Json<PodRmReport> {
+    let client = get_client();
+    let request = Request::new(cri::RemovePodSandboxRequest {
+        pod_sandbox_id: name.clone(),
+    });
+    let _response = client
+        .await
+        .unwrap()
+        .remove_pod_sandbox(request)
+        .await
+        .unwrap()
+        .into_inner();
+    let report = PodRmReport {
+        id: Some(name),
+        ..Default::default()
+    };
+    Json(report)
 }

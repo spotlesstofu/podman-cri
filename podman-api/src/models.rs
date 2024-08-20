@@ -12667,7 +12667,7 @@ impl std::convert::TryFrom<HeaderValue> for header::IntoHeaderValue<CpuUsage> {
 
 
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate, Default)]
 #[cfg_attr(feature = "conversion", derive(frunk::LabelledGeneric))]
 pub struct CreateContainerConfig {
     #[serde(rename = "ArgsEscaped")]
@@ -51774,7 +51774,7 @@ impl std::convert::TryFrom<HeaderValue> for header::IntoHeaderValue<PodRestartRe
 
 
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate, Default)]
 #[cfg_attr(feature = "conversion", derive(frunk::LabelledGeneric))]
 pub struct PodRmReport {
     #[serde(rename = "Err")]
@@ -52881,7 +52881,7 @@ impl std::convert::TryFrom<HeaderValue> for header::IntoHeaderValue<PodSpecGener
 
 
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate, Default)]
 #[cfg_attr(feature = "conversion", derive(frunk::LabelledGeneric))]
 pub struct PodStartReport {
     #[serde(rename = "Errs")]
@@ -53335,7 +53335,7 @@ impl std::convert::TryFrom<HeaderValue> for header::IntoHeaderValue<PodStatsRepo
 
 
 
-#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize, validator::Validate, Default)]
 #[cfg_attr(feature = "conversion", derive(frunk::LabelledGeneric))]
 pub struct PodStopReport {
     #[serde(rename = "Errs")]
