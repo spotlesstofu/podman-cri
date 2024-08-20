@@ -1,0 +1,5 @@
+FROM quay.io/podman/machine-os:5.3
+
+RUN \
+rpm-ostree install cri-o containernetworking-plugins kata-containers && \
+systemctl enable crio
