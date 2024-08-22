@@ -1,43 +1,33 @@
 # Podman machine
 
-Add functionality to the Podman machine to demo this project with peer pods.
+Extend the Podman machine to test and demo this project.
 
-## Container
-
+Build the container image:
 ```
 cd machine/
-podman build .
-podman machine init --now --image ...
+podman build -t podman-machine-cri .
 ```
 
-## Manually
+Save the container image to file:
+```
+podman save podman-machine-cri:latest -o image
+```
+
+Convert the container image to a disk image (see https://github.com/dustymabe/build-podman-machine-os-disks/):
+```
+./build-podman-machine-os-disks.sh image
+
+```
+
+Create and start the machine:
+```
+podman machine init podman-machine-cri --now --image ./podman-machine-cri.qcow2
+```
 
 Get a shell into the machine:
 ```bash
 podman machine ssh
 ```
-
-Install CRI-O and reboot:
-```bash
-rpm-ostree install cri-o containernetworking-plugins kata-containers
-systemctl enable crio
-systemctl reboot
-```
-
-Alternatively, get the Kata binaries from upstream:
-```command
-podman image pull "quay.io/kata-containers/kata-deploy:3.5.0"
-podman unshare
-cd $(podman image mount "quay.io/kata-containers/kata-deploy:3.5.0")
-cp opt/kata-artifacts/opt/kata/bin/kata-runtime /usr/bin/
-```
-
-Run Kata:
-```command
-podman run -ti --rm --runtime $(pwd)/kata-runtime --runtime-flag=config=~/code/podman-peerpods/kata-remote.toml fedora-minimal
-```
-
-You may want to create a systemd unit for that last one.
 
 Run the cloud API adaptor (**CAA**):
 
@@ -59,3 +49,5 @@ quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64 azure \
 -imageid "${AZURE_IMAGE_ID}" \
 -disable-cvm
 ```
+
+You may want to create a systemd unit for that last one.

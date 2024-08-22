@@ -1,5 +1,15 @@
+# Layer on top of the Podman machine image.
 FROM quay.io/podman/machine-os:5.3
 
 RUN \
+# Install dependencies.
 rpm-ostree install cri-o containernetworking-plugins kata-containers && \
+# Enable services.
 systemctl enable crio
+
+# Copy configuration.
+COPY kata.toml /opt/kata/configuration-remote.toml
+COPY crio.conf /etc/crio/crio.conf.d/50-kata-remote
+
+# Enable configuration.
+ENV CONTAINER_CONFIG=/etc/crio/crio.conf.d/50-kata-remote
