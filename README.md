@@ -97,4 +97,6 @@ index 1af1dde..d58b6b2 100644
 
 # Podman machine
 
+Extend the Podman machine to test and demo this project.
+
 See [machine/README.md](machine/README.md).
