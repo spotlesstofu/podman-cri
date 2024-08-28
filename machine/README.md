@@ -1,47 +1,43 @@
 # Podman machine
 
-Add functionality to the Podman machine to demo this project with peer pods.
-
-## Container
-
-```
-cd machine/
-podman build .
-podman machine init --now --image ...
-```
+Extend the Podman machine to test and demo this project.
 
 ## Manually
 
+Create a Podman machine:
+```
+podman machine init
+podman machine start
+```
+
 Get a shell into the machine:
-```bash
+```
 podman machine ssh
 ```
 
-Install CRI-O and reboot:
-```bash
+Install dependencies:
+```
 rpm-ostree install cri-o containernetworking-plugins kata-containers
+```
+
+Enable services:
+```
 systemctl enable crio
+```
+
+Copy-paste the configuration inside the machine:
+```
+kata.toml -> /opt/kata/configuration-remote.toml
+crio.conf -> /etc/crio/crio.conf.d/50-kata-remote
+```
+
+Reboot the machine:
+```
 systemctl reboot
 ```
 
-Alternatively, get the Kata binaries from upstream:
-```command
-podman image pull "quay.io/kata-containers/kata-deploy:3.5.0"
-podman unshare
-cd $(podman image mount "quay.io/kata-containers/kata-deploy:3.5.0")
-cp opt/kata-artifacts/opt/kata/bin/kata-runtime /usr/bin/
-```
-
-Run Kata:
-```command
-podman run -ti --rm --runtime $(pwd)/kata-runtime --runtime-flag=config=~/code/podman-peerpods/kata-remote.toml fedora-minimal
-```
-
-You may want to create a systemd unit for that last one.
-
-Run the cloud API adaptor (**CAA**):
-
-```console
+Run the cloud API adaptor (**CAA**) inside the machine:
+```sh
 podman run -ti --rm \
 --entrypoint /usr/local/bin/cloud-api-adaptor \
 --env-file caa.env \
@@ -58,4 +54,27 @@ quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64 azure \
 -securitygroupid "${AZURE_NSG_ID}" \
 -imageid "${AZURE_IMAGE_ID}" \
 -disable-cvm
+```
+
+## Scripted (incomplete)
+
+Build the container image:
+```
+cd machine/
+podman build -t podman-machine-cri .
+```
+
+Save the container image to file:
+```
+podman save podman-machine-cri:latest -o image
+```
+
+Convert the container image to a disk image (see https://github.com/dustymabe/build-podman-machine-os-disks/):
+```
+./build-podman-machine-os-disks.sh ...
+```
+
+Create and start the machine:
+```
+podman machine init podman-machine-cri --now --image ./podman-machine-cri.qcow2
 ```
