@@ -26,7 +26,7 @@ async fn get_client() -> Result<RuntimeServiceClient<Channel>, Box<dyn std::erro
                 Ok(val) => val,
                 Err(err) => {
                     eprintln!(
-                        "Error while reading CONTAINER_RUNTIME_ENDPOINT, using default. {err}"
+                        "CONTAINER_RUNTIME_ENDPOINT: {err}, using default."
                     );
                     "/run/crio/crio.sock".to_string()
                 }

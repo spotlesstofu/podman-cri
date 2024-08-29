@@ -57,10 +57,19 @@ Proto files sources:
 - https://github.com/gogo/protobuf/blob/v1.3.2/gogoproto/gogo.proto
 - https://github.com/protocolbuffers/protobuf/raw/v27.1/src/google/protobuf/descriptor.proto
 
-# Build dependencies
+# Build
 
-- protoc
-- protobuf-devel
+Install dependencies:
+```
+sudo dnf install -y gcc protobuf-devel
+```
+
+Install Rust. See the website [rustup.rs](https://rustup.rs/).
+
+Build:
+```
+cargo build
+```
 
 # Development utils
 
