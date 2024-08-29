@@ -15,25 +15,26 @@ Get a shell into the machine:
 podman machine ssh
 ```
 
-Install dependencies:
+Install dependencies and reboot:
 ```
-rpm-ostree install cri-o containernetworking-plugins kata-containers
+sudo rpm-ostree install cri-o containernetworking-plugins kata-containers
+sudo systemctl reboot
+```
+
+Copy the configuration:
+```
+cat kata.toml | podman machine ssh "sudo tee /opt/kata/configuration-remote.toml"
+cat crio.conf | podman machine ssh "sudo tee /etc/crio/crio.conf.d/50-kata-remote"
+```
+
+Back to the machine:
+```
+podman machine ssh
 ```
 
 Enable services:
 ```
-systemctl enable crio
-```
-
-Copy-paste the configuration inside the machine:
-```
-kata.toml -> /opt/kata/configuration-remote.toml
-crio.conf -> /etc/crio/crio.conf.d/50-kata-remote
-```
-
-Reboot the machine:
-```
-systemctl reboot
+systemctl enable --now crio
 ```
 
 Run the cloud API adaptor (**CAA**) inside the machine:
