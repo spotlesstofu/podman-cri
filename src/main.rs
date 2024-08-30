@@ -3,6 +3,9 @@ use axum::{
     Router,
 };
 
+pub mod unix;
+use crate::unix::serve;
+
 pub mod proxy;
 use crate::proxy::reverse_proxy;
 
@@ -32,6 +35,7 @@ async fn main() {
         // forward to podman all the non-matching paths
         .fallback(reverse_proxy);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    let path = "/run/user/1000/podman/podman.sock".to_string();
+
+    serve(app, path).await;
 }
