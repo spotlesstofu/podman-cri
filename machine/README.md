@@ -2,38 +2,45 @@
 
 Extend the Podman machine to test and demo this project.
 
+## Quick start
+
+```sh
+podman machine init --now
+podman machine os apply --restart 'quay.io/spotlesstofu/podman-cri:5.1'
+```
+
 ## Manually
 
 Create a Podman machine:
-```
+```sh
 podman machine init
 podman machine start
 ```
 
 Get a shell into the machine:
-```
+```sh
 podman machine ssh
 ```
 
 Install dependencies and reboot:
-```
+```sh
 sudo rpm-ostree install cri-o containernetworking-plugins kata-containers
 sudo systemctl reboot
 ```
 
 Copy the configuration:
-```
+```sh
 cat kata.toml | podman machine ssh "sudo tee /opt/kata/configuration-remote.toml"
 cat crio.conf | podman machine ssh "sudo tee /etc/crio/crio.conf.d/50-kata-remote"
 ```
 
 Back to the machine:
-```
+```sh
 podman machine ssh
 ```
 
 Enable services:
-```
+```sh
 systemctl enable --now crio
 ```
 
@@ -55,27 +62,4 @@ quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64 azure \
 -securitygroupid "${AZURE_NSG_ID}" \
 -imageid "${AZURE_IMAGE_ID}" \
 -disable-cvm
-```
-
-## Scripted (incomplete)
-
-Build the container image:
-```
-cd machine/
-podman build -t podman-machine-cri .
-```
-
-Save the container image to file:
-```
-podman save podman-machine-cri:latest -o image
-```
-
-Convert the container image to a disk image (see https://github.com/dustymabe/build-podman-machine-os-disks/):
-```
-./build-podman-machine-os-disks.sh ...
-```
-
-Create and start the machine:
-```
-podman machine init podman-machine-cri --now --image ./podman-machine-cri.qcow2
 ```
