@@ -1,5 +1,5 @@
 # Layer on top of the Podman machine image.
-FROM quay.io/podman/machine-os:5.3
+FROM quay.io/podman/machine-os:5.1
 
 RUN \
 # Install dependencies.
