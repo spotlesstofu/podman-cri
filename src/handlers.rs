@@ -345,3 +345,7 @@ pub async fn pod_delete_libpod(Path(name): Path<String>) -> Json<PodRmReport> {
     };
     Json(report)
 }
+
+pub async fn ping() -> StatusCode {
+    StatusCode::OK
+}

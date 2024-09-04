@@ -27,6 +27,8 @@ async fn main() {
         .route("/libpod/pods/:name/start", post(handlers::pod_start_libpod))
         .route("/libpod/pods/:name/stop", post(handlers::pod_stop_libpod))
         .route("/libpod/pods/:name", delete(handlers::pod_delete_libpod))
+        // reply to ping
+        .route("/_ping", get(handlers::ping))
         // forward to podman all the non-matching paths
         .fallback(reverse_proxy);
 
