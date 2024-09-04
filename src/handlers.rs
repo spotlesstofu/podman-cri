@@ -22,15 +22,7 @@ async fn get_client() -> Result<RuntimeServiceClient<Channel>, Box<dyn std::erro
     // We will ignore the http uri and connect to the Unix socket.
     let channel = Endpoint::try_from("http://[::]:50051")?
         .connect_with_connector(tower::service_fn(|_: Uri| {
-            let path = match std::env::var("CONTAINER_RUNTIME_ENDPOINT") {
-                Ok(val) => val,
-                Err(err) => {
-                    eprintln!(
-                        "CONTAINER_RUNTIME_ENDPOINT: {err}, using default."
-                    );
-                    "/run/crio/crio.sock".to_string()
-                }
-            };
+            let path = std::env::var("CONTAINER_RUNTIME_ENDPOINT").unwrap_or("/run/crio/crio.sock".into());
             UnixStream::connect(path)
         }))
         .await?;

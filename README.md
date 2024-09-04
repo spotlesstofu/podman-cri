@@ -71,6 +71,13 @@ Build:
 cargo build
 ```
 
+# Configuration
+
+Environment variables:
+- PODMAN_ENDPOINT
+- PODMAN_CRI_ENDPOINT
+- CONTAINER_RUNTIME_ENDPOINT
+
 # Development utils
 
 Inspect Podman API calls:

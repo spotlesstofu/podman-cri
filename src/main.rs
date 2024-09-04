@@ -30,7 +30,7 @@ async fn main() {
         // forward to podman all the non-matching paths
         .fallback(reverse_proxy);
 
-    let path = "/run/user/1000/podman/podman.sock".to_string();
+    let path = std::env::var("PODMAN_CRI_ENDPOINT").unwrap_or("/run/user/1000/podman/podman-cri.sock".into());
 
     serve(app, path).await;
 }

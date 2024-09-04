@@ -15,7 +15,8 @@ pub async fn reverse_proxy(req: Request<Body>) -> Result<Response, StatusCode> {
         .path_and_query()
         .map(|v| v.as_str())
         .unwrap_or(path);
-    let uri = Uri::new("/run/user/1000/podman/podman.sock", path_query);
+    let socket = std::env::var("PODMAN_ENDPOINT").unwrap_or("/run/user/1000/podman/podman.sock".into());
+    let uri = Uri::new(socket, path_query);
 
     let (parts, body) = req.into_parts();
     let bytes = to_bytes(body, usize::MAX).await.unwrap();
