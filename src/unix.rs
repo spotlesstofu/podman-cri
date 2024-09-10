@@ -24,33 +24,30 @@ pub async fn serve(app: Router, path: String) {
 
     let uds = UnixListener::bind(path_buf.clone()).unwrap();
 
-    tokio::spawn(async move {
-        let mut make_service = app.into_make_service_with_connect_info::<UdsConnectInfo>();
+    let mut make_service = app.into_make_service_with_connect_info::<UdsConnectInfo>();
 
-        // See https://github.com/tokio-rs/axum/blob/main/examples/serve-with-hyper/src/main.rs for
-        // more details about this setup
-        loop {
-            let (socket, _remote_addr) = uds.accept().await.unwrap();
+    // See https://github.com/tokio-rs/axum/blob/main/examples/serve-with-hyper/src/main.rs for
+    // more details about this setup
+    loop {
+        let (socket, _remote_addr) = uds.accept().await.unwrap();
 
-            let tower_service = unwrap_infallible(make_service.call(&socket).await);
+        let tower_service = unwrap_infallible(make_service.call(&socket).await);
 
-            tokio::spawn(async move {
-                let socket = TokioIo::new(socket);
+        tokio::spawn(async move {
+            let socket = TokioIo::new(socket);
 
-                let hyper_service =
-                    hyper::service::service_fn(move |request: Request<Incoming>| {
-                        tower_service.clone().call(request)
-                    });
-
-                if let Err(err) = server::conn::auto::Builder::new(TokioExecutor::new())
-                    .serve_connection_with_upgrades(socket, hyper_service)
-                    .await
-                {
-                    eprintln!("failed to serve connection: {err:#}");
-                }
+            let hyper_service = hyper::service::service_fn(move |request: Request<Incoming>| {
+                tower_service.clone().call(request)
             });
-        }
-    });
+
+            if let Err(err) = server::conn::auto::Builder::new(TokioExecutor::new())
+                .serve_connection_with_upgrades(socket, hyper_service)
+                .await
+            {
+                eprintln!("failed to serve connection: {err:#}");
+            }
+        });
+    }
 }
 
 pub async fn send(request: Request<Body>, path: String) -> Response<Incoming> {
