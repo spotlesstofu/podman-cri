@@ -9,19 +9,21 @@ use hyper_util::{
     rt::{TokioExecutor, TokioIo},
     server,
 };
+
 use std::{convert::Infallible, path::PathBuf, sync::Arc};
 use tokio::net::{unix::UCred, UnixListener, UnixStream};
 use tower::Service;
 
 pub async fn serve(app: Router, path: String) {
-    let path = PathBuf::from(path);
+    let path_buf = PathBuf::from(path.clone());
 
-    let _ = tokio::fs::remove_file(&path).await;
-    tokio::fs::create_dir_all(path.parent().unwrap())
+    let _ = tokio::fs::remove_file(&path_buf).await;
+    tokio::fs::create_dir_all(path_buf.parent().unwrap())
         .await
         .unwrap();
 
-    let uds = UnixListener::bind(path.clone()).unwrap();
+    let uds = UnixListener::bind(path_buf.clone()).unwrap();
+
     tokio::spawn(async move {
         let mut make_service = app.into_make_service_with_connect_info::<UdsConnectInfo>();
 
