@@ -2,6 +2,12 @@
 
 Extend the Podman machine to test and demo this project.
 
+## Requirements
+
+```sh
+dnf install podman-machine
+```
+
 ## Quick start
 
 ```sh
