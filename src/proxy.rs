@@ -10,6 +10,7 @@ use hyperlocal::{UnixClientExt, UnixConnector, Uri};
 
 pub async fn reverse_proxy(req: Request<Body>) -> Result<Response, StatusCode> {
     let path = req.uri().path();
+    println!("Forwarding path to Podman: {path}");
     let path_query = req
         .uri()
         .path_and_query()

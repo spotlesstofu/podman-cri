@@ -20,19 +20,19 @@ async fn main() {
         .route("/containers/:name/stop", post(handlers::container_stop))
         // libpod containers routes
         .route(
-            "/libpod/containers/json",
+            "/v4.2.0/libpod/containers/json",
             get(handlers::container_list_libpod),
         )
         .route(
-            "/libpod/containers/create",
+            "/v4.2.0/libpod/containers/create",
             post(handlers::container_create_libpod),
         )
         // libpod pods routes
-        .route("/libpod/pods/json", get(handlers::pod_list_libpod))
-        .route("/libpod/pods/create", post(handlers::pod_create_libpod))
-        .route("/libpod/pods/:name/start", post(handlers::pod_start_libpod))
-        .route("/libpod/pods/:name/stop", post(handlers::pod_stop_libpod))
-        .route("/libpod/pods/:name", delete(handlers::pod_delete_libpod))
+        .route("/v4.2.0/libpod/pods/json", get(handlers::pod_list_libpod))
+        .route("/v4.2.0/libpod/pods/create", post(handlers::pod_create_libpod))
+        .route("/v4.2.0/libpod/pods/:name/start", post(handlers::pod_start_libpod))
+        .route("/v4.2.0/libpod/pods/:name/stop", post(handlers::pod_stop_libpod))
+        .route("/v4.2.0/libpod/pods/:name", delete(handlers::pod_delete_libpod))
         // reply to ping
         .route("/_ping", get(handlers::ping))
         .route("/cri/_ping", get(handlers::ping))
