@@ -15,6 +15,46 @@ podman machine init --now
 podman machine os apply --restart 'quay.io/spotlesstofu/podman-cri:5.1'
 ```
 
+## How to test
+
+A vast selection of hacks allows to get things going,
+until we have a Podman desktop extension to sort things out.
+
+Copy the binary into the machine:
+```
+cat target/debug/podman-cri | podman machine ssh --username core "cat > podman-cri"
+```
+
+Enter the machine:
+```
+podman machine ssh --username core
+```
+
+Make CRI-O available to the `core` user:
+```
+sudo chown core /run/crio/crio.sock
+```
+
+Replace the Podman socket:
+```
+mv /run/user/1000/podman/podman.sock /run/user/1000/podman/podman2.sock
+```
+
+Start podman-cri, make it listen on the Podman socket:
+```
+PODMAN_ENDPOINT=/run/user/1000/podman/podman2.sock \
+PODMAN_CRI_ENDPOINT=/run/user/1000/podman/podman.sock \
+./podman-cri
+```
+
+Back to your host, ping podman-cri on the Podman socket. You should get a `200 OK`:
+```
+curl -I --unix-socket /run/user/1000/podman/podman-machine-default-api.sock http://example.com/cri/_ping
+```
+
+Now you can start Podman desktop, its requests will go through podman-cri.
+
+
 ## Manually
 
 Create a Podman machine:
@@ -25,7 +65,7 @@ podman machine start
 
 Get a shell into the machine:
 ```sh
-podman machine ssh
+podman machine ssh --username core
 ```
 
 Install dependencies and reboot:
@@ -36,19 +76,21 @@ sudo systemctl reboot
 
 Copy the configuration:
 ```sh
-cat kata.toml | podman machine ssh "sudo tee /opt/kata/configuration-remote.toml"
-cat crio.conf | podman machine ssh "sudo tee /etc/crio/crio.conf.d/50-kata-remote"
+cat kata.toml | podman machine ssh --username core "sudo tee /opt/kata/configuration-remote.toml"
+cat crio.conf | podman machine ssh --username core "sudo tee /etc/crio/crio.conf.d/50-kata-remote"
 ```
 
 Back to the machine:
 ```sh
-podman machine ssh
+podman machine ssh --username core
 ```
 
 Enable services:
 ```sh
 systemctl enable --now crio
 ```
+
+## Peer pods
 
 Run the cloud API adaptor (**CAA**) inside the machine:
 ```sh

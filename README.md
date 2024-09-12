@@ -11,6 +11,37 @@ Only a selection of the API endpoints will be available.
 
 Image build will be supported by proxying requests to Podman and then copying the built image to CRI-O.
 
+
+# Build
+
+Install dependencies:
+```
+sudo dnf install -y gcc protobuf-devel
+```
+
+Install Rust: see the website [rustup.rs](https://rustup.rs/).
+
+Build:
+```
+cargo build
+```
+
+
+# Test and demo
+
+To test and demo this project, use a Podman machine.
+
+See [machine/README.md](machine/README.md).
+
+
+# Configuration
+
+Environment variables:
+- PODMAN_ENDPOINT
+- PODMAN_CRI_ENDPOINT
+- CONTAINER_RUNTIME_ENDPOINT
+
+
 ## Podman API
 
 What is the Podman API? See https://docs.podman.io/en/latest/_static/api.html.
@@ -57,26 +88,6 @@ Proto files sources:
 - https://github.com/gogo/protobuf/blob/v1.3.2/gogoproto/gogo.proto
 - https://github.com/protocolbuffers/protobuf/raw/v27.1/src/google/protobuf/descriptor.proto
 
-# Build
-
-Install dependencies:
-```
-sudo dnf install -y gcc protobuf-devel
-```
-
-Install Rust. See the website [rustup.rs](https://rustup.rs/).
-
-Build:
-```
-cargo build
-```
-
-# Configuration
-
-Environment variables:
-- PODMAN_ENDPOINT
-- PODMAN_CRI_ENDPOINT
-- CONTAINER_RUNTIME_ENDPOINT
 
 # Development utils
 
@@ -110,9 +121,3 @@ index 1af1dde..d58b6b2 100644
  #[cfg(feature = "server")]
  use crate::header;
 ```
-
-# Podman machine
-
-Extend the Podman machine to test and demo this project.
-
-See [machine/README.md](machine/README.md).
