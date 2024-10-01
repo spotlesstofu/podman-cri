@@ -8,7 +8,7 @@ axum = { version = "0.7.5", features = ["json"] }
 serde = { version = "1.0.203", features = ["derive"] }
 tokio = { version = "1.38.0", features = ["fs", "rt-multi-thread"] }
 prost = "0.12.6"
-tonic = "0.11.0"
+tonic = "0.12.3"
 serde_json = "1.0.117"
 podman-api = { path = "podman-api" }
 tower = "0.4.13"
