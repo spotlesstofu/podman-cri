@@ -37,10 +37,26 @@ async fn main() {
         )
         // libpod pods routes
         .route("/v4.2.0/libpod/pods/json", get(handlers::pod_list_libpod))
-        .route("/v4.2.0/libpod/pods/create", post(handlers::pod_create_libpod))
-        .route("/v4.2.0/libpod/pods/:name/start", post(handlers::pod_start_libpod))
-        .route("/v4.2.0/libpod/pods/:name/stop", post(handlers::pod_stop_libpod))
-        .route("/v4.2.0/libpod/pods/:name", delete(handlers::pod_delete_libpod))
+        .route(
+            "/v4.2.0/libpod/pods/create",
+            post(handlers::pod_create_libpod),
+        )
+        .route(
+            "/v4.2.0/libpod/pods/:name/start",
+            post(handlers::pod_start_libpod),
+        )
+        .route(
+            "/v4.2.0/libpod/pods/:name/stop",
+            post(handlers::pod_stop_libpod),
+        )
+        .route(
+            "/v4.2.0/libpod/pods/:name",
+            delete(handlers::pod_delete_libpod),
+        )
+        .route(
+            "/v4.2.0/libpod/images/json",
+            get(handlers::images_list_libpod),
+        )
         // reply to ping
         .route("/_ping", get(handlers::ping))
         .route("/cri/_ping", get(handlers::ping))
