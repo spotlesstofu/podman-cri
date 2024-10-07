@@ -16,7 +16,7 @@ use cri::{image_service_client::ImageServiceClient, runtime_service_client::Runt
 use podman_api::models::{
     Container, ContainerCreateResponse, ContainerJson, CreateContainerConfig, IdResponse,
     ImageCreateQueryParams, ImageListLibpodQueryParams, LibpodImageSummary, ListContainer,
-    ListPodsReport, PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport,
+    ListPodsReport, Mount, PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport,
 };
 
 async fn get_channel() -> Result<Channel, Box<dyn Error>> {
@@ -226,6 +226,16 @@ pub async fn images_list_libpod(
         .collect();
 
     Json(images)
+}
+
+impl From<Mount> for cri::Mount {
+    fn from(value: Mount) -> Self {
+        cri::Mount {
+            host_path: value.source.expect("mount source"),
+            container_path: value.target.expect("mount target"),
+            ..Default::default()
+        }
+    }
 }
 
 #[derive(serde::Deserialize)]
