@@ -15,7 +15,8 @@ use cri::{image_service_client::ImageServiceClient, runtime_service_client::Runt
 
 use podman_api::models::{
     Container, ContainerCreateResponse, ContainerJson, CreateContainerConfig, IdResponse,
-    ListContainer, ListPodsReport, PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport,
+    ImageCreateQueryParams, ListContainer, ListPodsReport, PodRmReport, PodSpecGenerator,
+    PodStartReport, PodStopReport,
 };
 
 async fn get_channel() -> Result<Channel, Box<dyn Error>> {
@@ -150,6 +151,38 @@ pub async fn container_list_libpod() -> Json<Vec<ListContainer>> {
         .map(|item: cri::Container| -> ListContainer { item.into() })
         .collect();
     Json(podman_containers)
+}
+
+// POST /images/create
+pub async fn images_create(Json(params): Json<ImageCreateQueryParams>) -> String {
+    let image = params.from_image.expect("image to pull");
+    let tag = params.tag.expect("image tag or digest to pull");
+    images_pull(image, tag).await
+}
+
+async fn images_pull(image: String, tag: String) -> String {
+    let client = get_image_client();
+
+    let message = cri::PullImageRequest {
+        image: Some(cri::ImageSpec {
+            image,
+            user_specified_image: tag,
+            ..Default::default()
+        }),
+        auth: None,
+        sandbox_config: None,
+    };
+
+    let request = Request::new(message);
+    let response = client
+        .await
+        .unwrap()
+        .pull_image(request)
+        .await
+        .unwrap()
+        .into_inner();
+
+    response.image_ref
 }
 
 #[derive(serde::Deserialize)]

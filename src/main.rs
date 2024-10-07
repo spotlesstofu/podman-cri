@@ -25,6 +25,7 @@ async fn main() {
         .route("/containers/json", get(handlers::container_list))
         .route("/containers/:name/json", get(handlers::container_inspect))
         .route("/containers/:name/stop", post(handlers::container_stop))
+        .route("/images/create", post(handlers::images_create))
         // libpod containers routes
         .route(
             "/v4.2.0/libpod/containers/json",
