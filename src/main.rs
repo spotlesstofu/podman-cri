@@ -3,6 +3,8 @@ use axum::{
     Router,
 };
 
+use tower_http::trace::TraceLayer;
+
 pub mod unix;
 use crate::unix::serve;
 
@@ -13,6 +15,11 @@ pub mod handlers;
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt()
+        .with_max_level(tracing::Level::DEBUG)
+        // .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     let app = Router::new()
         // compat containers routes
         .route("/containers/json", get(handlers::container_list))
@@ -37,7 +44,8 @@ async fn main() {
         .route("/_ping", get(handlers::ping))
         .route("/cri/_ping", get(handlers::ping))
         // forward to podman all the non-matching paths
-        .fallback(reverse_proxy);
+        .fallback(reverse_proxy)
+        .layer(TraceLayer::new_for_http());
 
     let path = std::env::var("PODMAN_CRI_ENDPOINT")
         .unwrap_or("/run/user/1000/podman/podman-cri.sock".into());
