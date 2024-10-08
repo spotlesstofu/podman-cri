@@ -238,6 +238,43 @@ impl From<Mount> for cri::Mount {
     }
 }
 
+impl From<String> for cri::KeyValue {
+    fn from(env: String) -> Self {
+        let (key, value) = env.split_once('=').expect("env key/value delimiter");
+        cri::KeyValue {
+            key: key.to_string(),
+            value: value.to_string(),
+        }
+    }
+}
+
+impl From<CreateContainerConfig> for cri::ContainerConfig {
+    fn from(value: CreateContainerConfig) -> Self {
+        let image = match value.image {
+            Some(image) => Some(cri::ImageSpec {
+                image,
+                ..Default::default()
+            }),
+            None => None,
+        };
+
+        cri::ContainerConfig {
+            image,
+            command: value.entrypoint.unwrap_or_default(),
+            args: value.cmd.unwrap_or_default(),
+            working_dir: value.working_dir.unwrap_or_default(),
+            envs: value
+                .env
+                .unwrap_or_default()
+                .into_iter()
+                .map(|env| -> cri::KeyValue { env.into() })
+                .collect(),
+            labels: value.labels.unwrap_or_default().into_iter().collect(),
+            ..Default::default()
+        }
+    }
+}
+
 #[derive(serde::Deserialize)]
 pub struct ContainerCreatePayload {
     name: String,
@@ -246,50 +283,19 @@ pub struct ContainerCreatePayload {
 
 /// container_create_libpod responds to `POST /libpod/containers/create`.
 pub async fn container_create_libpod(
-    Json(payload): Json<ContainerCreatePayload>,
+    Json(params): Json<CreateContainerConfig>,
 ) -> Json<ContainerCreateResponse> {
     let client = get_client();
+
+    let config: cri::ContainerConfig = params.into();
+
+    // CreateContainer creates a new container in specified PodSandbox
     let message = cri::CreateContainerRequest {
-        pod_sandbox_id: "default".to_string(), // Assuming a default pod sandbox ID
-        config: Some(cri::ContainerConfig {
-            metadata: None,
-            image: Some(cri::ImageSpec {
-                // Assuming the image name is the same as the container name
-                image: payload.name.clone(),
-                ..Default::default()
-            }),
-            command: payload.body.cmd.unwrap_or_default(),
-            args: payload.body.entrypoint.unwrap_or_default(),
-            working_dir: payload.body.working_dir.unwrap_or_default(),
-            envs: payload
-                .body
-                .env
-                .unwrap_or_default()
-                .into_iter()
-                .map(|env| cri::KeyValue {
-                    key: env.clone(),
-                    value: env,
-                })
-                .collect(),
-            mounts: Vec::new(),
-            devices: Vec::new(),
-            labels: payload
-                .body
-                .labels
-                .unwrap_or_default()
-                .into_iter()
-                .collect(),
-            annotations: std::collections::HashMap::new(),
-            log_path: format!("{}-log.log", payload.name),
-            stdin: payload.body.open_stdin.unwrap_or(false),
-            stdin_once: payload.body.stdin_once.unwrap_or(false),
-            tty: payload.body.tty.unwrap_or(false),
-            linux: None,
-            windows: None,
-            cdi_devices: Vec::new(),
-        }),
-        sandbox_config: None,
+        pod_sandbox_id: "default".to_string(),
+        config: Some(config),
+        ..Default::default()
     };
+
     let request = Request::new(message);
     let response = client
         .await
@@ -298,9 +304,11 @@ pub async fn container_create_libpod(
         .await
         .unwrap()
         .into_inner();
+
     let id = response.container_id;
     let warnings = Vec::new();
-    let response = ContainerCreateResponse::new(id, warnings);
+    let response = ContainerCreateResponse { id, warnings };
+
     Json(response)
 }
 
