@@ -1,5 +1,5 @@
 use axum::{
-    routing::{delete, get, post},
+    routing::{delete, get, post, any},
     Router,
 };
 
@@ -70,8 +70,8 @@ async fn main() {
         // reply to ping
         .route("/_ping", get(handlers::runtime::ping))
         .route("/cri/_ping", get(handlers::runtime::ping))
-        // forward to podman all the non-matching paths
-        .fallback(reverse_proxy)
+        // forward to podman all the paths we don't want to handle
+        .route("/v4.2.0/libpod/info", any(reverse_proxy))
         .layer(TraceLayer::new_for_http());
 
     let path = std::env::var("PODMAN_CRI_ENDPOINT")

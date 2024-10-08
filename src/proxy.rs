@@ -8,15 +8,18 @@ use http_body_util::Full;
 use hyper_util::client::legacy::Client;
 use hyperlocal::{UnixClientExt, UnixConnector, Uri};
 
+const PODMAN_ENDPOINT_DEFAULT: &str = "/run/user/1000/podman/podman.sock";
+
 pub async fn reverse_proxy(req: Request<Body>) -> Result<Response, StatusCode> {
     let path = req.uri().path();
-    println!("Forwarding path to Podman: {path}");
     let path_query = req
         .uri()
         .path_and_query()
         .map(|v| v.as_str())
         .unwrap_or(path);
-    let socket = std::env::var("PODMAN_ENDPOINT").unwrap_or("/run/user/1000/podman/podman.sock".into());
+
+    let socket =
+        std::env::var("PODMAN_ENDPOINT").unwrap_or(PODMAN_ENDPOINT_DEFAULT.into());
     let uri = Uri::new(socket, path_query);
 
     let (parts, body) = req.into_parts();
