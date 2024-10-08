@@ -5,6 +5,10 @@ use axum::{
 
 use tower_http::trace::TraceLayer;
 
+pub mod cri {
+    tonic::include_proto!("runtime.v1");
+}
+
 pub mod unix;
 use crate::unix::serve;
 
@@ -12,6 +16,7 @@ pub mod proxy;
 use crate::proxy::reverse_proxy;
 
 pub mod handlers;
+pub mod cri_clients;
 
 #[tokio::main]
 async fn main() {
