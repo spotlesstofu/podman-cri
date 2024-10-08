@@ -8,13 +8,13 @@ use crate::cri;
 use crate::cri_clients::get_image_client;
 
 // POST /images/create
-pub async fn images_create(Json(params): Json<ImageCreateQueryParams>) -> String {
+pub async fn image_create(Json(params): Json<ImageCreateQueryParams>) -> String {
     let image = params.from_image.expect("image to pull");
     let tag = params.tag.expect("image tag or digest to pull");
-    images_pull(image, tag).await
+    image_pull(image, tag).await
 }
 
-async fn images_pull(image: String, tag: String) -> String {
+async fn image_pull(image: String, tag: String) -> String {
     let client = get_image_client();
 
     let message = cri::PullImageRequest {
@@ -51,10 +51,10 @@ impl From<cri::Image> for LibpodImageSummary {
     }
 }
 
-pub async fn images_list_libpod(
+pub async fn image_list_libpod(
     Json(params): Json<ImageListLibpodQueryParams>,
 ) -> Json<Vec<LibpodImageSummary>> {
-    if (params.filters.is_some()) {
+    if params.filters.is_some() {
         tracing::debug!("ignoring filters")
     }
 

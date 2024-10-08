@@ -30,7 +30,7 @@ async fn main() {
         .route("/containers/json", get(handlers::container_list))
         .route("/containers/:name/json", get(handlers::container_inspect))
         .route("/containers/:name/stop", post(handlers::container_stop))
-        .route("/images/create", post(handlers::images::images_create))
+        .route("/images/create", post(handlers::image::image_create))
         // libpod containers routes
         .route(
             "/v4.2.0/libpod/containers/json",
@@ -60,7 +60,7 @@ async fn main() {
         )
         .route(
             "/v4.2.0/libpod/images/json",
-            get(handlers::images::images_list_libpod),
+            get(handlers::image::image_list_libpod),
         )
         // reply to ping
         .route("/_ping", get(handlers::ping))

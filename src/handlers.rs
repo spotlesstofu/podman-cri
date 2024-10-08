@@ -11,7 +11,7 @@ use podman_api::models::{
 use crate::cri;
 use crate::cri_clients::get_client;
 
-pub mod images;
+pub mod image;
 
 impl From<cri::Container> for Container {
     fn from(value: cri::Container) -> Self {
