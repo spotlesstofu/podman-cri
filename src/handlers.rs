@@ -248,7 +248,8 @@ pub struct ContainerCreatePayload {
     body: CreateContainerConfig,
 }
 
-/// container_create_libpod responds to `POST /libpod/containers/create`.
+// POST /containers/create
+// POST /libpod/containers/create
 pub async fn container_create_libpod(
     Json(params): Json<CreateContainerConfig>,
 ) -> Json<ContainerCreateResponse> {
@@ -326,6 +327,7 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
 /// pod_create_libpod responds to POST `/libpod/pods/create`.
 pub async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> Json<IdResponse> {
     let client = get_client();
+
     let pod_sandbox_config = cri::PodSandboxConfig {
         metadata: Some(cri::PodSandboxMetadata {
             name: payload.name.unwrap_or_default(),
@@ -346,12 +348,14 @@ pub async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> Json<Id
             overhead: None,
             resources: None,
         }),
-        windows: None,
+        ..Default::default()
     };
+
     let message = cri::RunPodSandboxRequest {
         config: Some(pod_sandbox_config),
         runtime_handler: "runc".to_string(),
     };
+
     let request = Request::new(message);
     let response = client
         .await
@@ -360,8 +364,10 @@ pub async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> Json<Id
         .await
         .unwrap()
         .into_inner();
+
     let id = response.pod_sandbox_id;
     let response = IdResponse::new(id);
+
     Json(response)
 }
 
