@@ -9,9 +9,16 @@ use crate::cri_clients::get_image_client;
 
 // POST /images/create
 pub async fn image_create(Json(params): Json<ImageCreateQueryParams>) -> String {
-    let image = params.from_image.expect("image to pull");
-    let tag = params.tag.expect("image tag or digest to pull");
-    image_pull(image, tag).await
+    if params.from_image.is_some() {
+        let image = params.from_image.unwrap();
+        let tag = params.tag.expect("image tag or digest to pull");
+        image_pull(image, tag).await
+    } else if params.from_src.is_some() {
+        // TODO proxy to podman to build the image, then copy the image to CRI-O.
+        unimplemented!("build image");
+    } else {
+        panic!("missing param from_image or from_src");
+    }
 }
 
 async fn image_pull(image: String, tag: String) -> String {
