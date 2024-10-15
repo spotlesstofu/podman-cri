@@ -144,13 +144,10 @@ impl From<String> for cri::KeyValue {
 
 impl From<CreateContainerConfig> for cri::ContainerConfig {
     fn from(value: CreateContainerConfig) -> Self {
-        let image = match value.image {
-            Some(image) => Some(cri::ImageSpec {
-                image,
-                ..Default::default()
-            }),
-            None => None,
-        };
+        let image = value.image.map(|image| cri::ImageSpec {
+            image,
+            ..Default::default()
+        });
 
         cri::ContainerConfig {
             image,
@@ -210,6 +207,7 @@ pub async fn container_create_libpod(
 /// pod_list_libpod responds to `GET /libpod/pods/json`.
 pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
     let client = get_client();
+
     let request = cri::ListPodSandboxRequest::default();
     let response = client
         .await
@@ -217,6 +215,7 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
         .list_pod_sandbox(request)
         .await
         .unwrap();
+
     let cri_pods = response.into_inner().items;
 
     let podman_pods: Vec<ListPodsReport> = cri_pods
@@ -256,7 +255,9 @@ fn get_random_string() -> String {
 }
 
 /// pod_create_libpod responds to POST `/libpod/pods/create`.
-pub async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> (StatusCode, Json<IdResponse>) {
+pub async fn pod_create_libpod(
+    Json(payload): Json<PodSpecGenerator>,
+) -> (StatusCode, Json<IdResponse>) {
     let client = get_client();
 
     let name = payload.name.unwrap_or(get_random_string());
