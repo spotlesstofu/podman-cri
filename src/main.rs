@@ -1,5 +1,5 @@
 use axum::{
-    routing::{delete, get, post, any},
+    routing::{any, delete, get, post},
     Router,
 };
 
@@ -32,9 +32,15 @@ async fn main() {
             "/containers/create",
             post(handlers::runtime::container_create_libpod),
         )
-        .route("/containers/:name/json", get(handlers::runtime::container_inspect))
+        .route(
+            "/containers/:name/json",
+            get(handlers::runtime::container_inspect),
+        )
         // .route("/containers/:name/start", post(handlers::container_start))
-        .route("/containers/:name/stop", post(handlers::runtime::container_stop))
+        .route(
+            "/containers/:name/stop",
+            post(handlers::runtime::container_stop),
+        )
         .route("/images/create", post(handlers::image::image_create))
         // libpod containers routes
         .route(
@@ -46,7 +52,10 @@ async fn main() {
             post(handlers::runtime::container_create_libpod),
         )
         // libpod pods routes
-        .route("/v4.2.0/libpod/pods/json", get(handlers::runtime::pod_list_libpod))
+        .route(
+            "/v4.2.0/libpod/pods/json",
+            get(handlers::runtime::pod_list_libpod),
+        )
         .route(
             "/v4.2.0/libpod/pods/create",
             post(handlers::runtime::pod_create_libpod),
