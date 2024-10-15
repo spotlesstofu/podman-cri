@@ -54,6 +54,7 @@ curl -I --unix-socket /run/user/1000/podman/podman-machine-default-api.sock http
 
 Now you can start Podman desktop, its requests will go through podman-cri.
 
+To force the AI extension to use this setup, change the permissions for the Podman desktop flatpak. Replace `xdg-run/podman:create` with `xdg-run/podman/podman-machine-default-api.sock:create`. You may use the Flatseal app to do this change.
 
 ## Manually
 
