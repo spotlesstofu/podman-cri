@@ -81,6 +81,7 @@ async fn main() {
         .route("/cri/_ping", get(handlers::runtime::ping))
         // forward to podman all the paths we don't want to handle
         .route("/v4.2.0/libpod/info", any(reverse_proxy))
+        .route("/events", any(reverse_proxy))
         .layer(TraceLayer::new_for_http());
 
     let path = std::env::var("PODMAN_CRI_ENDPOINT")
