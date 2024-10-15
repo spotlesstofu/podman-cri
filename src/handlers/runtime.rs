@@ -55,16 +55,21 @@ impl From<cri::Container> for ListContainer {
     }
 }
 
-pub async fn container_list() -> Json<Vec<Container>> {
+async fn list_containers(filter: Option<cri::ContainerFilter>) -> Vec<cri::Container> {
     let client = get_client();
-    let request = Request::new(cri::ListContainersRequest::default());
+    let message = cri::ListContainersRequest { filter };
+    let request = Request::new(message);
     let response = client
         .await
         .unwrap()
         .list_containers(request)
         .await
         .unwrap();
-    let cri_containers = response.into_inner().containers;
+    response.into_inner().containers
+}
+
+pub async fn container_list() -> Json<Vec<Container>> {
+    let cri_containers = list_containers(None).await;
     let podman_containers: Vec<Container> = cri_containers
         .into_iter()
         .map(|item: cri::Container| -> Container { item.into() })
@@ -75,22 +80,11 @@ pub async fn container_list() -> Json<Vec<Container>> {
 pub async fn container_inspect(
     Path(name): Path<String>,
 ) -> Result<Json<ContainerJson>, StatusCode> {
-    let client = get_client();
     let filter = cri::ContainerFilter {
         id: name,
         ..Default::default()
     };
-    let message = cri::ListContainersRequest {
-        filter: Some(filter),
-    };
-    let request = Request::new(message);
-    let response = client
-        .await
-        .unwrap()
-        .list_containers(request)
-        .await
-        .unwrap();
-    let cri_container: Option<cri::Container> = response.into_inner().containers.pop();
+    let cri_container: Option<cri::Container> = list_containers(Some(filter)).await.pop();
     match cri_container {
         Some(cri_container) => {
             let podman_container: ContainerJson = cri_container.into();
@@ -106,15 +100,7 @@ pub async fn container_stop() -> StatusCode {
 }
 
 pub async fn container_list_libpod() -> Json<Vec<ListContainer>> {
-    let client = get_client();
-    let request = Request::new(cri::ListContainersRequest::default());
-    let response = client
-        .await
-        .unwrap()
-        .list_containers(request)
-        .await
-        .unwrap();
-    let cri_containers = response.into_inner().containers;
+    let cri_containers = list_containers(None).await;
     let podman_containers: Vec<ListContainer> = cri_containers
         .into_iter()
         .map(|item: cri::Container| -> ListContainer { item.into() })
@@ -205,6 +191,10 @@ pub async fn container_create_libpod(
     Json(response)
 }
 
+fn get_pod_containers() -> Vec<ListPodContainer> {
+    Vec::new()
+}
+
 fn convert_pod(
     value: cri::PodSandbox,
     containers: Option<Vec<ListPodContainer>>,
@@ -244,7 +234,7 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
         .items
         .into_iter()
         .map(|value| {
-            let containers: Option<Vec<ListPodContainer>> = None;
+            let containers = Some(get_pod_containers());
             convert_pod(value, containers)
         })
         .collect();
