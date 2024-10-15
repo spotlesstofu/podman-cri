@@ -6,8 +6,8 @@ use uuid::Uuid;
 
 use podman_api::models::{
     Container, ContainerCreateResponse, ContainerJson, CreateContainerConfig, IdResponse,
-    ListContainer, ListPodsReport, Mount, PodRmReport, PodSpecGenerator, PodStartReport,
-    PodStopReport,
+    ListContainer, ListPodContainer, ListPodsReport, Mount, PodRmReport, PodSpecGenerator,
+    PodStartReport, PodStopReport,
 };
 
 use crate::cri;
@@ -174,6 +174,7 @@ pub struct ContainerCreatePayload {
 
 // POST /containers/create
 // POST /libpod/containers/create
+// TODO "sandbox config is nil"
 pub async fn container_create_libpod(
     Json(params): Json<CreateContainerConfig>,
 ) -> Json<ContainerCreateResponse> {
@@ -204,24 +205,25 @@ pub async fn container_create_libpod(
     Json(response)
 }
 
-impl From<cri::PodSandbox> for ListPodsReport {
-    fn from(value: cri::PodSandbox) -> Self {
-        let metadata = value.metadata.unwrap();
-        ListPodsReport {
-            id: Some(value.id),
-            name: Some(metadata.name.clone()),
-            namespace: Some(metadata.namespace.clone()),
-            status: Some(match cri::PodSandboxState::try_from(value.state).unwrap() {
-                cri::PodSandboxState::SandboxReady => "Ready".to_string(),
-                cri::PodSandboxState::SandboxNotready => "NotReady".to_string(),
-            }),
-            cgroup: None,
-            containers: None,
-            created: None,
-            infra_id: Some(metadata.namespace.clone()),
-            labels: Some(value.labels),
-            networks: None,
-        }
+fn convert_pod(
+    value: cri::PodSandbox,
+    containers: Option<Vec<ListPodContainer>>,
+) -> ListPodsReport {
+    let metadata = value.metadata.unwrap();
+    ListPodsReport {
+        id: Some(value.id),
+        name: Some(metadata.name.clone()),
+        namespace: Some(metadata.namespace.clone()),
+        status: Some(match cri::PodSandboxState::try_from(value.state).unwrap() {
+            cri::PodSandboxState::SandboxReady => "Ready".to_string(),
+            cri::PodSandboxState::SandboxNotready => "NotReady".to_string(),
+        }),
+        cgroup: None,
+        containers,
+        created: None,
+        infra_id: Some(metadata.namespace.clone()),
+        labels: Some(value.labels),
+        networks: None,
     }
 }
 
@@ -241,7 +243,10 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
         .into_inner()
         .items
         .into_iter()
-        .map(|value| value.into())
+        .map(|value| {
+            let containers: Option<Vec<ListPodContainer>> = None;
+            convert_pod(value, containers)
+        })
         .collect();
 
     Json(pods)
