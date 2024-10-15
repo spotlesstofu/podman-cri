@@ -204,6 +204,27 @@ pub async fn container_create_libpod(
     Json(response)
 }
 
+impl From<cri::PodSandbox> for ListPodsReport {
+    fn from(value: cri::PodSandbox) -> Self {
+        let metadata = value.metadata.unwrap();
+        ListPodsReport {
+            id: Some(value.id),
+            name: Some(metadata.name.clone()),
+            namespace: Some(metadata.namespace.clone()),
+            status: Some(match cri::PodSandboxState::try_from(value.state).unwrap() {
+                cri::PodSandboxState::SandboxReady => "Ready".to_string(),
+                cri::PodSandboxState::SandboxNotready => "NotReady".to_string(),
+            }),
+            cgroup: None,
+            containers: None,
+            created: None,
+            infra_id: Some(metadata.namespace.clone()),
+            labels: Some(value.labels),
+            networks: None,
+        }
+    }
+}
+
 /// pod_list_libpod responds to `GET /libpod/pods/json`.
 pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
     let client = get_client();
@@ -216,38 +237,14 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
         .await
         .unwrap();
 
-    let cri_pods = response.into_inner().items;
-
-    let podman_pods: Vec<ListPodsReport> = cri_pods
+    let pods: Vec<ListPodsReport> = response
+        .into_inner()
+        .items
         .into_iter()
-        .map(|pod_sandbox| {
-            let mut pod_report = ListPodsReport::new();
-            pod_report.id = Some(pod_sandbox.id);
-            pod_report.name = Some(
-                pod_sandbox
-                    .metadata
-                    .as_ref()
-                    .map(|m| m.name.clone())
-                    .unwrap_or_default(),
-            );
-            pod_report.namespace = Some(
-                pod_sandbox
-                    .metadata
-                    .as_ref()
-                    .map(|m| m.namespace.clone())
-                    .unwrap_or_default(),
-            );
-            pod_report.status = Some(
-                match cri::PodSandboxState::try_from(pod_sandbox.state).unwrap() {
-                    cri::PodSandboxState::SandboxReady => "Ready".to_string(),
-                    cri::PodSandboxState::SandboxNotready => "NotReady".to_string(),
-                },
-            );
-            pod_report
-        })
+        .map(|value| value.into())
         .collect();
 
-    Json(podman_pods)
+    Json(pods)
 }
 
 fn get_random_string() -> String {
