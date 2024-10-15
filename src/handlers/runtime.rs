@@ -1,6 +1,8 @@
-use axum::{extract::Path, http::StatusCode, Json};
+use std::collections::HashMap;
 
+use axum::{extract::Path, http::StatusCode, Json};
 use tonic::Request;
+use uuid::Uuid;
 
 use podman_api::models::{
     Container, ContainerCreateResponse, ContainerJson, CreateContainerConfig, IdResponse,
@@ -249,36 +251,34 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
     Json(podman_pods)
 }
 
+fn get_random_string() -> String {
+    Uuid::new_v4().to_string().split_at(8).0.to_string()
+}
+
 /// pod_create_libpod responds to POST `/libpod/pods/create`.
-pub async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> Json<IdResponse> {
+pub async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> (StatusCode, Json<IdResponse>) {
     let client = get_client();
 
-    let pod_sandbox_config = cri::PodSandboxConfig {
+    let name = payload.name.unwrap_or(get_random_string());
+
+    let config = cri::PodSandboxConfig {
         metadata: Some(cri::PodSandboxMetadata {
-            name: payload.name.unwrap_or_default(),
+            name: name.clone(),
             uid: "".to_string(),
-            namespace: "".to_string(),
+            namespace: payload.infra_name.unwrap_or(name.clone()),
             attempt: 0,
         }),
-        hostname: payload.hostname.unwrap_or_default(),
-        log_directory: "".to_string(),
-        dns_config: None,
+        hostname: payload.hostname.unwrap_or(name.clone()),
+        log_directory: "/var/log/pods/".to_string(),
         port_mappings: Vec::new(),
-        labels: payload.labels.unwrap_or_default().into_iter().collect(),
-        annotations: std::collections::HashMap::new(),
-        linux: Some(cri::LinuxPodSandboxConfig {
-            cgroup_parent: payload.cgroup_parent.unwrap_or_default(),
-            security_context: None,
-            sysctls: std::collections::HashMap::new(),
-            overhead: None,
-            resources: None,
-        }),
+        labels: payload.labels.unwrap_or_default(),
+        annotations: HashMap::new(),
         ..Default::default()
     };
 
     let message = cri::RunPodSandboxRequest {
-        config: Some(pod_sandbox_config),
-        runtime_handler: "runc".to_string(),
+        config: Some(config),
+        runtime_handler: "".to_string(),
     };
 
     let request = Request::new(message);
@@ -293,7 +293,7 @@ pub async fn pod_create_libpod(Json(payload): Json<PodSpecGenerator>) -> Json<Id
     let id = response.pod_sandbox_id;
     let response = IdResponse::new(id);
 
-    Json(response)
+    (StatusCode::CREATED, Json(response))
 }
 
 /// pod_start_libpod responds to POST `/libpod/pods/:name/start`.
