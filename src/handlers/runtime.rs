@@ -196,15 +196,15 @@ fn get_pod_containers() -> Vec<ListPodContainer> {
 }
 
 fn convert_pod(
-    value: cri::PodSandbox,
+    pod: cri::PodSandbox,
     containers: Option<Vec<ListPodContainer>>,
 ) -> ListPodsReport {
-    let metadata = value.metadata.unwrap();
+    let metadata = pod.metadata.unwrap();
     ListPodsReport {
-        id: Some(value.id),
+        id: Some(pod.id),
         name: Some(metadata.name.clone()),
         namespace: Some(metadata.namespace.clone()),
-        status: Some(match cri::PodSandboxState::try_from(value.state).unwrap() {
+        status: Some(match cri::PodSandboxState::try_from(pod.state).unwrap() {
             cri::PodSandboxState::SandboxReady => "Ready".to_string(),
             cri::PodSandboxState::SandboxNotready => "NotReady".to_string(),
         }),
@@ -212,7 +212,7 @@ fn convert_pod(
         containers,
         created: None,
         infra_id: Some(metadata.namespace.clone()),
-        labels: Some(value.labels),
+        labels: Some(pod.labels),
         networks: None,
     }
 }
@@ -233,9 +233,9 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
         .into_inner()
         .items
         .into_iter()
-        .map(|value| {
+        .map(|pod| {
             let containers = Some(get_pod_containers());
-            convert_pod(value, containers)
+            convert_pod(pod, containers)
         })
         .collect();
 
