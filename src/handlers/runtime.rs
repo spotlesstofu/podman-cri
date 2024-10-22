@@ -163,12 +163,6 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
     }
 }
 
-#[derive(serde::Deserialize)]
-pub struct ContainerCreatePayload {
-    name: String,
-    body: CreateContainerConfig,
-}
-
 // POST /containers/create
 // POST /libpod/containers/create
 // TODO "sandbox config is nil"
