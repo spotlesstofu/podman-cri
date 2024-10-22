@@ -1,3 +1,4 @@
+use futures::future;
 use std::collections::HashMap;
 
 use axum::{extract::Path, http::StatusCode, Json};
@@ -50,6 +51,16 @@ impl From<cri::Container> for ListContainer {
                     .replace("_", " "),
             ),
             labels: Some(container.labels),
+            ..Default::default()
+        }
+    }
+}
+
+impl From<cri::Container> for ListPodContainer {
+    fn from(value: cri::Container) -> Self {
+        ListPodContainer {
+            id: Some(value.id.clone()),
+            status: Some(value.state().as_str_name().to_string()),
             ..Default::default()
         }
     }
@@ -191,15 +202,18 @@ pub async fn container_create_libpod(
     Json(response)
 }
 
-fn get_pod_containers() -> Vec<ListPodContainer> {
-    Vec::new()
+async fn get_pod_containers(pod_sandbox_id: String) -> Vec<ListPodContainer> {
+    let filter = cri::ContainerFilter {
+        pod_sandbox_id,
+        ..Default::default()
+    };
+    let containers = list_containers(Some(filter)).await;
+    containers.into_iter().map(|value| value.into()).collect()
 }
 
-fn convert_pod(
-    pod: cri::PodSandbox,
-    containers: Option<Vec<ListPodContainer>>,
-) -> ListPodsReport {
+async fn convert_pod(pod: cri::PodSandbox) -> ListPodsReport {
     let metadata = pod.metadata.unwrap();
+    let containers = get_pod_containers(pod.id.clone()).await;
     ListPodsReport {
         id: Some(pod.id),
         name: Some(metadata.name.clone()),
@@ -209,7 +223,7 @@ fn convert_pod(
             cri::PodSandboxState::SandboxNotready => "NotReady".to_string(),
         }),
         cgroup: None,
-        containers,
+        containers: Some(containers),
         created: None,
         infra_id: Some(metadata.namespace.clone()),
         labels: Some(pod.labels),
@@ -229,15 +243,8 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
         .await
         .unwrap();
 
-    let pods: Vec<ListPodsReport> = response
-        .into_inner()
-        .items
-        .into_iter()
-        .map(|pod| {
-            let containers = Some(get_pod_containers());
-            convert_pod(pod, containers)
-        })
-        .collect();
+    let cri_pods = response.into_inner().items;
+    let pods: Vec<ListPodsReport> = future::join_all(cri_pods.into_iter().map(convert_pod)).await;
 
     Json(pods)
 }
