@@ -8,7 +8,7 @@ use uuid::Uuid;
 use podman_api::models::{
     Container, ContainerCreateResponse, ContainerJson, CreateContainerConfig, IdResponse,
     ListContainer, ListPodContainer, ListPodsReport, Mount, PodRmReport, PodSpecGenerator,
-    PodStartReport, PodStopReport,
+    PodStartReport, PodStopReport, SpecGenerator,
 };
 
 use crate::cri;
@@ -139,6 +139,24 @@ impl From<String> for cri::KeyValue {
     }
 }
 
+async fn create_container(message: cri::CreateContainerRequest) -> Json<ContainerCreateResponse> {
+    let client = get_client();
+    let request = Request::new(message);
+    let response = client
+        .await
+        .unwrap()
+        .create_container(request)
+        .await
+        .unwrap()
+        .into_inner();
+
+    let id = response.container_id;
+    let warnings = Vec::new();
+    let response = ContainerCreateResponse { id, warnings };
+
+    Json(response)
+}
+
 impl From<CreateContainerConfig> for cri::ContainerConfig {
     fn from(value: CreateContainerConfig) -> Self {
         let image = value.image.map(|image| cri::ImageSpec {
@@ -164,36 +182,29 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
 }
 
 // POST /containers/create
-// POST /libpod/containers/create
-// TODO "sandbox config is nil"
-pub async fn container_create_libpod(
+pub async fn container_create(
     Json(params): Json<CreateContainerConfig>,
 ) -> Json<ContainerCreateResponse> {
-    let client = get_client();
-
     let config: cri::ContainerConfig = params.into();
+    let pod_sandbox_id = get_random_string();
 
-    // CreateContainer creates a new container in specified PodSandbox
     let message = cri::CreateContainerRequest {
-        pod_sandbox_id: "default".to_string(),
+        pod_sandbox_id,
         config: Some(config),
         ..Default::default()
     };
 
-    let request = Request::new(message);
-    let response = client
-        .await
-        .unwrap()
-        .create_container(request)
-        .await
-        .unwrap()
-        .into_inner();
+    create_container(message).await
+}
 
-    let id = response.container_id;
-    let warnings = Vec::new();
-    let response = ContainerCreateResponse { id, warnings };
+// POST /libpod/containers/create
+pub async fn container_create_libpod(
+    Json(params): Json<SpecGenerator>,
+) -> Json<ContainerCreateResponse> {
+    todo!();
+    let message: cri::CreateContainerRequest = params.into();
 
-    Json(response)
+    create_container(message).await
 }
 
 async fn get_pod_containers(pod_sandbox_id: String) -> Vec<ListPodContainer> {
