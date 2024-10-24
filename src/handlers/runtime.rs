@@ -258,12 +258,29 @@ fn get_random_string() -> String {
     Uuid::new_v4().to_string().split_at(8).0.to_string()
 }
 
+async fn create_pod(config: cri::PodSandboxConfig) -> String {
+    let client = get_client();
+    let message = cri::RunPodSandboxRequest {
+        config: Some(config),
+        ..Default::default()
+    };
+
+    let request = Request::new(message);
+    let response = client
+        .await
+        .unwrap()
+        .run_pod_sandbox(request)
+        .await
+        .unwrap()
+        .into_inner();
+
+    response.pod_sandbox_id
+}
+
 /// pod_create_libpod responds to POST `/libpod/pods/create`.
 pub async fn pod_create_libpod(
     Json(payload): Json<PodSpecGenerator>,
 ) -> (StatusCode, Json<IdResponse>) {
-    let client = get_client();
-
     let name = payload.name.unwrap_or(get_random_string());
 
     let config = cri::PodSandboxConfig {
@@ -281,21 +298,7 @@ pub async fn pod_create_libpod(
         ..Default::default()
     };
 
-    let message = cri::RunPodSandboxRequest {
-        config: Some(config),
-        runtime_handler: "".to_string(),
-    };
-
-    let request = Request::new(message);
-    let response = client
-        .await
-        .unwrap()
-        .run_pod_sandbox(request)
-        .await
-        .unwrap()
-        .into_inner();
-
-    let id = response.pod_sandbox_id;
+    let id = create_pod(config).await;
     let response = IdResponse::new(id);
 
     (StatusCode::CREATED, Json(response))
