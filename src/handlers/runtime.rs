@@ -139,8 +139,23 @@ impl From<String> for cri::KeyValue {
     }
 }
 
-async fn create_container(message: cri::CreateContainerRequest) -> Json<ContainerCreateResponse> {
+async fn create_container(config: cri::ContainerConfig, pod_sandbox_id: Option<String>) -> Json<ContainerCreateResponse> {
     let client = get_client();
+
+    let pod_sandbox_id = match pod_sandbox_id {
+        Some(id) => id,
+        None => create_pod_default().await,
+    };
+
+    // CRI-O requires the pod config even if it's not needed. Pass an empty config.
+    let sandbox_config = cri::PodSandboxConfig::default();
+
+    let message = cri::CreateContainerRequest {
+        pod_sandbox_id,
+        config: Some(config),
+        sandbox_config: Some(sandbox_config)
+    };
+
     let request = Request::new(message);
     let response = client
         .await
@@ -185,26 +200,21 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
 pub async fn container_create(
     Json(params): Json<CreateContainerConfig>,
 ) -> Json<ContainerCreateResponse> {
+    let pod_sandbox_id = None;
     let config: cri::ContainerConfig = params.into();
-    let pod_sandbox_id = get_random_string();
 
-    let message = cri::CreateContainerRequest {
-        pod_sandbox_id,
-        config: Some(config),
-        ..Default::default()
-    };
-
-    create_container(message).await
+    create_container(config, pod_sandbox_id).await
+}
 }
 
 // POST /libpod/containers/create
 pub async fn container_create_libpod(
     Json(params): Json<SpecGenerator>,
 ) -> Json<ContainerCreateResponse> {
-    todo!();
-    let message: cri::CreateContainerRequest = params.into();
+    let pod_sandbox_id = params.pod.clone();
+    let config: cri::ContainerConfig = params.into();
 
-    create_container(message).await
+    create_container(config, pod_sandbox_id).await
 }
 
 async fn get_pod_containers(pod_sandbox_id: String) -> Vec<ListPodContainer> {
