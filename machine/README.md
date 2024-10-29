@@ -6,6 +6,7 @@ Extend the Podman machine to test and demo this project.
 
 ```sh
 dnf install podman-machine
+flatpak install io.podman_desktop.PodmanDesktop
 ```
 
 ## Quick start
