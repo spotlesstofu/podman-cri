@@ -30,7 +30,7 @@ async fn main() {
         .route("/containers/json", get(handlers::runtime::container_list))
         .route(
             "/containers/create",
-            post(handlers::runtime::container_create_libpod),
+            post(handlers::runtime::container_create),
         )
         .route(
             "/containers/:name/json",
