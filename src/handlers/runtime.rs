@@ -139,7 +139,10 @@ impl From<String> for cri::KeyValue {
     }
 }
 
-async fn create_container(config: cri::ContainerConfig, pod_sandbox_id: Option<String>) -> Json<ContainerCreateResponse> {
+async fn create_container(
+    config: cri::ContainerConfig,
+    pod_sandbox_id: Option<String>,
+) -> Json<ContainerCreateResponse> {
     let client = get_client();
 
     let pod_sandbox_id = match pod_sandbox_id {
@@ -153,7 +156,7 @@ async fn create_container(config: cri::ContainerConfig, pod_sandbox_id: Option<S
     let message = cri::CreateContainerRequest {
         pod_sandbox_id,
         config: Some(config),
-        sandbox_config: Some(sandbox_config)
+        sandbox_config: Some(sandbox_config),
     };
 
     let request = Request::new(message);
@@ -174,13 +177,13 @@ async fn create_container(config: cri::ContainerConfig, pod_sandbox_id: Option<S
 
 impl From<CreateContainerConfig> for cri::ContainerConfig {
     fn from(value: CreateContainerConfig) -> Self {
-        let image = value.image.map(|image| cri::ImageSpec {
-            image,
+        let image = cri::ImageSpec {
+            image: value.image.expect("image"),
             ..Default::default()
-        });
+        };
 
         cri::ContainerConfig {
-            image,
+            image: Some(image),
             command: value.entrypoint.unwrap_or_default(),
             args: value.cmd.unwrap_or_default(),
             working_dir: value.working_dir.unwrap_or_default(),
@@ -188,9 +191,9 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
                 .env
                 .unwrap_or_default()
                 .into_iter()
-                .map(|env| -> cri::KeyValue { env.into() })
+                .map(|item| item.into())
                 .collect(),
-            labels: value.labels.unwrap_or_default().into_iter().collect(),
+            labels: value.labels.unwrap_or_default(),
             ..Default::default()
         }
     }
