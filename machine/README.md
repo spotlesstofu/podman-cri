@@ -21,6 +21,11 @@ podman machine os apply --restart 'quay.io/spotlesstofu/podman-cri:5.1'
 A vast selection of hacks allows to get things going,
 until we have a Podman desktop extension to sort things out.
 
+Start the machine:
+```
+podman machine start
+```
+
 Copy the binary into the machine:
 ```
 cat target/debug/podman-cri | podman machine ssh --username core "cat > podman-cri"
