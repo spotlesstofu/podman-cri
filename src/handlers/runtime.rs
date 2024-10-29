@@ -191,7 +191,7 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
                 .env
                 .unwrap_or_default()
                 .into_iter()
-                .map(|item| item.into())
+                .map(|item| -> cri::KeyValue { item.into() })
                 .collect(),
             labels: value.labels.unwrap_or_default(),
             ..Default::default()
@@ -226,7 +226,10 @@ async fn get_pod_containers(pod_sandbox_id: String) -> Vec<ListPodContainer> {
         ..Default::default()
     };
     let containers = list_containers(Some(filter)).await;
-    containers.into_iter().map(|value| value.into()).collect()
+    containers
+        .into_iter()
+        .map(|value| -> ListPodContainer { value.into() })
+        .collect()
 }
 
 async fn convert_pod(pod: cri::PodSandbox) -> ListPodsReport {
