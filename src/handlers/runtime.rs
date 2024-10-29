@@ -6,9 +6,9 @@ use tonic::Request;
 use uuid::Uuid;
 
 use podman_api::models::{
-    Container, ContainerCreateResponse, ContainerJson, CreateContainerConfig, IdResponse,
-    ListContainer, ListPodContainer, ListPodsReport, Mount, PodRmReport, PodSpecGenerator,
-    PodStartReport, PodStopReport, SpecGenerator,
+    Container, ContainerCreateResponse, ContainerJson, ContainerStartQueryParams,
+    CreateContainerConfig, IdResponse, ListContainer, ListPodContainer, ListPodsReport, Mount,
+    PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport, SpecGenerator,
 };
 
 use crate::cri;
@@ -102,6 +102,20 @@ pub async fn container_inspect(
             Ok(Json(podman_container))
         }
         None => Err(StatusCode::NOT_FOUND),
+    }
+}
+
+pub async fn container_start(
+    Path(name): Path<String>,
+    Json(params): Json<ContainerStartQueryParams>,
+) -> StatusCode {
+    let client = get_client();
+    let request = cri::StartContainerRequest { container_id: name };
+    let result = client.await.unwrap().start_container(request).await;
+
+    match result {
+        Ok(_) => StatusCode::NO_CONTENT,
+        Err(_E) => todo!(),
     }
 }
 

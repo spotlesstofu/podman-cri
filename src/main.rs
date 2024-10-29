@@ -36,7 +36,10 @@ async fn main() {
             "/containers/:name/json",
             get(handlers::runtime::container_inspect),
         )
-        // .route("/containers/:name/start", post(handlers::container_start))
+        .route(
+            "/containers/:name/start",
+            post(handlers::runtime::container_start),
+        )
         .route(
             "/containers/:name/stop",
             post(handlers::runtime::container_stop),
