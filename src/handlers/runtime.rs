@@ -222,6 +222,42 @@ pub async fn container_create(
 
     create_container(config, pod_sandbox_id).await
 }
+
+impl From<SpecGenerator> for cri::ContainerConfig {
+    fn from(value: SpecGenerator) -> Self {
+        let metadata = cri::ContainerMetadata {
+            name: value.name.unwrap_or_else(get_random_string),
+            ..Default::default()
+        };
+
+        let image = cri::ImageSpec {
+            image: value.image.expect("image"),
+            ..Default::default()
+        };
+
+        cri::ContainerConfig {
+            metadata: Some(metadata),
+            image: Some(image),
+            command: value.entrypoint.unwrap_or(todo!()),
+            args: value.command.unwrap_or(todo!()),
+            working_dir: value.work_dir.unwrap_or("/".to_string()),
+            envs: value
+                .env
+                .unwrap_or_default()
+                .into_iter()
+                .map(|(key, value)| cri::KeyValue { key, value })
+                .collect(),
+            mounts: value
+                .mounts
+                .unwrap_or_default()
+                .into_iter()
+                .map(|item| -> cri::Mount { item.into() })
+                .collect(),
+            labels: value.labels.unwrap_or_default(),
+            annotations: value.annotations.unwrap_or_default(),
+            ..Default::default()
+        }
+    }
 }
 
 // POST /libpod/containers/create
