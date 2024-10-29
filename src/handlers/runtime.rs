@@ -307,6 +307,19 @@ async fn create_pod(config: cri::PodSandboxConfig) -> String {
     response.pod_sandbox_id
 }
 
+async fn create_pod_default() -> String {
+    let metadata = cri::PodSandboxMetadata {
+        name: get_random_string(),
+        ..Default::default()
+    };
+
+    let config = cri::PodSandboxConfig {
+        metadata: Some(metadata),
+        ..Default::default()
+    };
+    create_pod(config).await
+}
+
 /// pod_create_libpod responds to POST `/libpod/pods/create`.
 pub async fn pod_create_libpod(
     Json(payload): Json<PodSpecGenerator>,
