@@ -352,6 +352,7 @@ async fn create_pod(config: cri::PodSandboxConfig) -> String {
 async fn create_pod_default() -> String {
     let metadata = cri::PodSandboxMetadata {
         name: get_random_string(),
+        namespace: "default".to_string(),
         ..Default::default()
     };
 
