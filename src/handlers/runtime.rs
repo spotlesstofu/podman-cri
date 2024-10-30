@@ -302,11 +302,12 @@ async fn convert_pod(pod: cri::PodSandbox) -> ListPodsReport {
     }
 }
 
-/// pod_list_libpod responds to `GET /libpod/pods/json`.
-pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
+async fn list_pod_sandbox(filter: Option<cri::PodSandboxFilter>) -> Vec<cri::PodSandbox> {
     let client = get_client();
 
-    let request = cri::ListPodSandboxRequest::default();
+    let request = cri::ListPodSandboxRequest {
+        filter
+    };
     let response = client
         .await
         .unwrap()
@@ -314,7 +315,12 @@ pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
         .await
         .unwrap();
 
-    let cri_pods = response.into_inner().items;
+        response.into_inner().items
+}
+
+/// pod_list_libpod responds to `GET /libpod/pods/json`.
+pub async fn pod_list_libpod() -> Json<Vec<ListPodsReport>> {
+    let cri_pods = list_pod_sandbox(None);
     let pods: Vec<ListPodsReport> = future::join_all(cri_pods.into_iter().map(convert_pod)).await;
 
     Json(pods)
