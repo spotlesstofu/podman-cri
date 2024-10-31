@@ -62,41 +62,6 @@ Now you can start Podman desktop, its requests will go through podman-cri.
 
 To force the AI extension to use this setup, change the permissions for the Podman desktop flatpak. Replace `xdg-run/podman:create` with `xdg-run/podman/podman-machine-default-api.sock:create`. You may use the Flatseal app to do this change.
 
-## Manually
-
-Create a Podman machine:
-```sh
-podman machine init
-podman machine start
-```
-
-Get a shell into the machine:
-```sh
-podman machine ssh --username core
-```
-
-Install dependencies and reboot:
-```sh
-sudo rpm-ostree install cri-o containernetworking-plugins kata-containers
-sudo systemctl reboot
-```
-
-Copy the configuration:
-```sh
-cat kata.toml | podman machine ssh --username core "sudo tee /opt/kata/configuration-remote.toml"
-cat crio.conf | podman machine ssh --username core "sudo tee /etc/crio/crio.conf.d/50-kata-remote"
-```
-
-Back to the machine:
-```sh
-podman machine ssh --username core
-```
-
-Enable services:
-```sh
-systemctl enable --now crio
-```
-
 ## Peer pods
 
 Run the cloud API adaptor (**CAA**) inside the machine:
