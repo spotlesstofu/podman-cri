@@ -9,14 +9,16 @@ dnf install podman-machine
 flatpak install io.podman_desktop.PodmanDesktop
 ```
 
-## Quick start
+## Init machine
 
 ```sh
 podman machine init --now
 podman machine os apply --restart 'quay.io/spotlesstofu/podman-cri:5.1'
 ```
 
-## How to test
+Alternatively, build and push the Containerfile yourself and use that.
+
+## Proof-of-concept setup
 
 A vast selection of hacks allows to get things going,
 until we have a Podman desktop extension to sort things out.
