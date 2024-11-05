@@ -153,19 +153,29 @@ impl From<String> for cri::KeyValue {
     }
 }
 
+async fn get_sandbox_config(pod_sandbox_id: String) -> cri::PodSandboxConfig {
+    let filter = cri::PodSandboxFilter {
+        id: pod_sandbox_id,
+        ..Default::default()
+    };
+
+    let pod_sandbox_list = list_pod_sandbox(Some(filter)).await;
+    let pod_sandbox = pod_sandbox_list.first().expect("pod_sandbox");
+
+    cri::PodSandboxConfig {
+        metadata: pod_sandbox.metadata.clone(),
+        ..Default::default()
+    }
+}
+
 async fn create_container(
     config: cri::ContainerConfig,
-    pod_sandbox_id: Option<String>,
+    pod_sandbox_id: String,
 ) -> Json<ContainerCreateResponse> {
     let client = get_client();
 
-    let pod_sandbox_id = match pod_sandbox_id {
-        Some(id) => id,
-        None => create_pod_default().await,
-    };
-
-    // CRI-O requires the pod config even if it's not needed. Pass an empty config.
-    let sandbox_config = cri::PodSandboxConfig::default();
+    // the CRI requires the sandbox config to be passed in the request "for easy reference" :shrug:
+    let sandbox_config = get_sandbox_config(pod_sandbox_id.clone()).await;
 
     let message = cri::CreateContainerRequest {
         pod_sandbox_id,
@@ -217,7 +227,7 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
 pub async fn container_create(
     Json(params): Json<CreateContainerConfig>,
 ) -> Json<ContainerCreateResponse> {
-    let pod_sandbox_id = None;
+    let pod_sandbox_id = create_pod_default().await;
     let config: cri::ContainerConfig = params.into();
 
     create_container(config, pod_sandbox_id).await
@@ -264,7 +274,7 @@ impl From<SpecGenerator> for cri::ContainerConfig {
 pub async fn container_create_libpod(
     Json(params): Json<SpecGenerator>,
 ) -> Json<ContainerCreateResponse> {
-    let pod_sandbox_id = params.pod.clone();
+    let pod_sandbox_id = params.pod.clone().unwrap();
     let config: cri::ContainerConfig = params.into();
 
     create_container(config, pod_sandbox_id).await
@@ -305,9 +315,7 @@ async fn convert_pod(pod: cri::PodSandbox) -> ListPodsReport {
 async fn list_pod_sandbox(filter: Option<cri::PodSandboxFilter>) -> Vec<cri::PodSandbox> {
     let client = get_client();
 
-    let request = cri::ListPodSandboxRequest {
-        filter
-    };
+    let request = cri::ListPodSandboxRequest { filter };
     let response = client
         .await
         .unwrap()
@@ -315,7 +323,7 @@ async fn list_pod_sandbox(filter: Option<cri::PodSandboxFilter>) -> Vec<cri::Pod
         .await
         .unwrap();
 
-        response.into_inner().items
+    response.into_inner().items
 }
 
 /// pod_list_libpod responds to `GET /libpod/pods/json`.
