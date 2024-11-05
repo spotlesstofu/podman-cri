@@ -201,12 +201,18 @@ async fn create_container(
 
 impl From<CreateContainerConfig> for cri::ContainerConfig {
     fn from(value: CreateContainerConfig) -> Self {
+        let metadata = cri::ContainerMetadata {
+            name: value.name.unwrap_or_else(get_random_string),
+            ..Default::default()
+        };
+
         let image = cri::ImageSpec {
             image: value.image.expect("image"),
             ..Default::default()
         };
 
         cri::ContainerConfig {
+            metadata: Some(metadata),
             image: Some(image),
             command: value.entrypoint.unwrap_or_default(),
             args: value.cmd.unwrap_or_default(),
