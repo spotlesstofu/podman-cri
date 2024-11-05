@@ -461,3 +461,12 @@ pub async fn pod_delete_libpod(Path(name): Path<String>) -> Json<PodRmReport> {
 pub async fn ping() -> StatusCode {
     StatusCode::OK
 }
+
+pub async fn version() -> Json<cri::VersionResponse>{
+    let client = get_client();
+    let request = Request::new(cri::VersionRequest {
+        version: "podman-cri".to_string(),
+    });
+    let response = client.await.unwrap().version(request).await.unwrap().into_inner();
+    Json(response)
+}

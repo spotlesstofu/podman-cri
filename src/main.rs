@@ -82,6 +82,7 @@ async fn main() {
         // reply to ping
         .route("/_ping", get(handlers::runtime::ping))
         .route("/cri/_ping", get(handlers::runtime::ping))
+        .route("/cri/version", get(handlers::runtime::version))
         // forward to podman all the paths we don't want to handle
         .route("/v4.2.0/libpod/info", any(reverse_proxy))
         .route("/events", any(reverse_proxy))
