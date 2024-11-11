@@ -171,7 +171,7 @@ async fn get_sandbox_config(pod_sandbox_id: String) -> cri::PodSandboxConfig {
 async fn create_container(
     config: cri::ContainerConfig,
     pod_sandbox_id: String,
-) -> Json<ContainerCreateResponse> {
+) -> (StatusCode, Json<ContainerCreateResponse>) {
     let client = get_client();
 
     // the CRI requires the sandbox config to be passed in the request "for easy reference" :shrug:
@@ -196,7 +196,7 @@ async fn create_container(
     let warnings = Vec::new();
     let response = ContainerCreateResponse { id, warnings };
 
-    Json(response)
+    (StatusCode::CREATED, Json(response))
 }
 
 impl From<CreateContainerConfig> for cri::ContainerConfig {
@@ -232,7 +232,7 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
 // POST /containers/create
 pub async fn container_create(
     Json(params): Json<CreateContainerConfig>,
-) -> Json<ContainerCreateResponse> {
+) -> (StatusCode, Json<ContainerCreateResponse>) {
     let pod_sandbox_id = create_pod_default().await;
     let config: cri::ContainerConfig = params.into();
 
@@ -279,7 +279,7 @@ impl From<SpecGenerator> for cri::ContainerConfig {
 // POST /libpod/containers/create
 pub async fn container_create_libpod(
     Json(params): Json<SpecGenerator>,
-) -> Json<ContainerCreateResponse> {
+) -> (StatusCode, Json<ContainerCreateResponse>) {
     let pod_sandbox_id = params.pod.clone().unwrap();
     let config: cri::ContainerConfig = params.into();
 
