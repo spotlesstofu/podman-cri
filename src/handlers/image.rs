@@ -2,7 +2,7 @@ use axum::Json;
 
 use tonic::Request;
 
-use podman_api::models::{ImageCreateQueryParams, ImageListLibpodQueryParams, LibpodImageSummary};
+use podman_api::models::{ImageCreateQueryParams, LibpodImageSummary};
 
 use crate::cri::{self, ImageFilter};
 use crate::cri_clients::get_image_client;
@@ -84,7 +84,10 @@ async fn pull_image_or_local(
 
 impl From<cri::Image> for LibpodImageSummary {
     fn from(value: cri::Image) -> Self {
+        let digest = value.repo_digests[0].split_once("@").unwrap().1;
+
         LibpodImageSummary {
+            digest: Some(digest.to_string()),
             id: Some(value.id),
             repo_tags: Some(value.repo_tags),
             repo_digests: Some(value.repo_digests),
@@ -94,30 +97,27 @@ impl From<cri::Image> for LibpodImageSummary {
     }
 }
 
-pub async fn image_list_libpod(
-    Json(params): Json<ImageListLibpodQueryParams>,
-) -> Json<Vec<LibpodImageSummary>> {
-    if params.filters.is_some() {
-        tracing::debug!("ignoring filters")
-    }
+async fn list_images(filter: Option<ImageFilter>) -> Vec<cri::Image> {
+    let client = get_image_client().await;
 
-    let client = get_image_client();
-
-    let message = cri::ListImagesRequest {
-        ..Default::default()
-    };
+    let message = cri::ListImagesRequest { filter };
 
     let request = Request::new(message);
-    let response = client
-        .await
+
+    client
         .unwrap()
         .list_images(request)
         .await
         .unwrap()
-        .into_inner();
-
-    let images: Vec<LibpodImageSummary> = response
+        .into_inner()
         .images
+}
+
+pub async fn image_list_libpod() -> Json<Vec<LibpodImageSummary>> {
+    let filter = None;
+
+    let images: Vec<LibpodImageSummary> = list_images(filter)
+        .await
         .into_iter()
         .map(|item: cri::Image| -> LibpodImageSummary { item.into() })
         .collect();
