@@ -9,8 +9,11 @@ Podman API client ---( Podman API )---> This project ---( CRI API )---> CRI-O
 
 Only a selection of the API endpoints will be available.
 
-Image build will be supported by proxying requests to Podman and then copying the built image to CRI-O.
-
+Image endpoints are proxied to Podman.
+Podman and CRI-O share the same storage for images,
+so CRI-O can access transparently any image that Podman pulls or builds.
+Just make sure that CRI-O and Podman are both running as the root user.
+See containers-storage.conf(5).
 
 # Build
 

@@ -44,7 +44,6 @@ async fn main() {
             "/containers/:name/stop",
             post(handlers::runtime::container_stop),
         )
-        .route("/images/create", post(handlers::image::image_create))
         // libpod containers routes
         .route(
             "/v4.2.0/libpod/containers/json",
@@ -75,16 +74,17 @@ async fn main() {
             "/v4.2.0/libpod/pods/:name",
             delete(handlers::runtime::pod_delete_libpod),
         )
-        .route(
-            "/v4.2.0/libpod/images/json",
-            get(handlers::image::image_list_libpod),
-        )
         // reply to ping
         .route("/_ping", get(handlers::runtime::ping))
         .route("/cri/_ping", get(handlers::runtime::ping))
         .route("/cri/version", get(handlers::runtime::version))
-        // forward to podman all the paths we don't want to handle
+        // forward to podman all the image-related paths
+        // CRI-O and Podman (root user) share the same storage for images,
+        // so CRI-O can access any image pulled or built by Podman.
+        .route("/images/*path", any(reverse_proxy))
+        .route("/v4.2.0/libpod/images/*path", get(any(reverse_proxy)))
         .route("/build", post(reverse_proxy))
+        // forward to podman all the other paths we don't want to handle
         .route("/v4.2.0/libpod/info", any(reverse_proxy))
         .route("/events", any(reverse_proxy))
         .route("/volumes", post(reverse_proxy))

@@ -5,7 +5,8 @@ RUN \
 # Install dependencies.
 rpm-ostree install cri-o containernetworking-plugins kata-containers && \
 # Enable services.
-systemctl enable crio
+systemctl enable crio && \
+systemctl enable podman
 
 # Copy configuration.
 COPY kata.toml /opt/kata/configuration-remote.toml

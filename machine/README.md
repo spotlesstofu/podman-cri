@@ -30,17 +30,12 @@ podman machine start
 
 Copy the binary into the machine:
 ```
-cat target/debug/podman-cri | podman machine ssh --username core "cat > podman-cri"
+cat target/debug/podman-cri | podman machine ssh --username root "cat > podman-cri"
 ```
 
 Enter the machine:
 ```
-podman machine ssh --username core
-```
-
-Make CRI-O available to the `core` user:
-```
-sudo chown core /run/crio/crio.sock
+podman machine ssh --username root
 ```
 
 Replace the Podman socket:
@@ -50,9 +45,13 @@ mv /run/user/1000/podman/podman.sock /run/user/1000/podman/podman2.sock
 
 Start podman-cri, make it listen on the Podman socket:
 ```
-PODMAN_ENDPOINT=/run/user/1000/podman/podman2.sock \
+PODMAN_ENDPOINT=/run/podman/podman.sock \
 PODMAN_CRI_ENDPOINT=/run/user/1000/podman/podman.sock \
 ./podman-cri
+```
+
+```
+chown core /run/user/1000/podman/podman.sock
 ```
 
 Back to your host, ping podman-cri on the Podman socket. You should get a `200 OK`:
