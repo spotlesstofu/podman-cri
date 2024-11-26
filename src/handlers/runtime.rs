@@ -211,6 +211,21 @@ async fn create_container(
     (StatusCode::CREATED, Json(response))
 }
 
+/// Cleans input from Podman Desktop.
+/// Podman Desktop sometimes passes a garbage "sha256:" at the beginning of the image ID.
+fn clean_image(image: String) -> String {
+    match image.split_once(":") {
+        Some((s1, s2)) => {
+            if s1.starts_with("sha") {
+                s2.to_string()
+            } else {
+                image
+            }
+        }
+        None => image,
+    }
+}
+
 impl From<CreateContainerConfig> for cri::ContainerConfig {
     fn from(value: CreateContainerConfig) -> Self {
         let metadata = cri::ContainerMetadata {
@@ -218,14 +233,16 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
             ..Default::default()
         };
 
-        let image = cri::ImageSpec {
-            image: value.image.expect("image"),
+        let image = clean_image(value.image.expect("image"));
+
+        let image_spec = cri::ImageSpec {
+            image,
             ..Default::default()
         };
 
         cri::ContainerConfig {
             metadata: Some(metadata),
-            image: Some(image),
+            image: Some(image_spec),
             command: value.entrypoint.unwrap_or_default(),
             args: value.cmd.unwrap_or_default(),
             working_dir: value.working_dir.unwrap_or_default(),
@@ -258,14 +275,16 @@ impl From<SpecGenerator> for cri::ContainerConfig {
             ..Default::default()
         };
 
-        let image = cri::ImageSpec {
-            image: value.image.expect("image"),
+        let image = clean_image(value.image.expect("image"));
+
+        let image_spec = cri::ImageSpec {
+            image,
             ..Default::default()
         };
 
         cri::ContainerConfig {
             metadata: Some(metadata),
-            image: Some(image),
+            image: Some(image_spec),
             command: value.entrypoint.unwrap(),
             args: value.command.unwrap(),
             working_dir: value.work_dir.unwrap_or("/".to_string()),
