@@ -18,8 +18,7 @@ pub async fn reverse_proxy(req: Request<Body>) -> Result<Response, StatusCode> {
         .map(|v| v.as_str())
         .unwrap_or(path);
 
-    let socket =
-        std::env::var("PODMAN_ENDPOINT").unwrap_or(PODMAN_ENDPOINT_DEFAULT.into());
+    let socket = std::env::var("PODMAN_ENDPOINT").unwrap_or(PODMAN_ENDPOINT_DEFAULT.into());
     let uri = Uri::new(socket, path_query);
 
     let (parts, body) = req.into_parts();
@@ -31,7 +30,7 @@ pub async fn reverse_proxy(req: Request<Body>) -> Result<Response, StatusCode> {
         .body(Full::from(bytes))
         .expect("request builder");
 
-    // todo: add parts.headers to req?
+    // TODO add parts.headers to req?
 
     let client: Client<UnixConnector, Full<Bytes>> = Client::unix();
     let response = client
