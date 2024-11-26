@@ -85,13 +85,17 @@ async fn pull_image_or_local(
 impl From<cri::Image> for LibpodImageSummary {
     fn from(value: cri::Image) -> Self {
         let digest = value.repo_digests[0].split_once("@").unwrap().1;
+        let size = Some(value.size.try_into().unwrap_or(0));
 
-        LibpodImageSummary {
+        Self {
             digest: Some(digest.to_string()),
             id: Some(value.id),
-            repo_tags: Some(value.repo_tags),
+            // TODO repo_tags = value.repo_tags + value.repo_digests
+            repo_tags: Some(value.repo_digests.clone()),
             repo_digests: Some(value.repo_digests),
-            size: Some(value.size.try_into().unwrap_or_default()),
+            size,
+            virtual_size: size,
+            shared_size: Some(0),
             ..Default::default()
         }
     }
