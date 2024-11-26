@@ -1,3 +1,4 @@
+use axum::response::IntoResponse;
 use futures::future;
 use std::collections::HashMap;
 
@@ -105,18 +106,29 @@ pub async fn container_inspect(
     }
 }
 
-pub async fn container_start(
-    Path(name): Path<String>,
-    Json(params): Json<ContainerStartQueryParams>,
-) -> StatusCode {
+pub struct TonicStatusWrapper {
+    status: tonic::Status,
+}
+
+impl From<tonic::Status> for TonicStatusWrapper {
+    fn from(status: tonic::Status) -> Self {
+        Self { status }
+    }
+}
+
+impl IntoResponse for TonicStatusWrapper {
+    fn into_response(self) -> axum::response::Response {
+        let message = self.status.message().to_owned();
+        axum::response::Response::new(message.into())
+    }
+}
+
+pub async fn container_start(Path(name): Path<String>) -> Result<StatusCode, TonicStatusWrapper> {
     let client = get_client();
     let request = cri::StartContainerRequest { container_id: name };
-    let result = client.await.unwrap().start_container(request).await;
+    client.await.unwrap().start_container(request).await?;
 
-    match result {
-        Ok(_) => StatusCode::NO_CONTENT,
-        Err(_E) => todo!(),
-    }
+    Ok(StatusCode::NO_CONTENT)
 }
 
 // POST
