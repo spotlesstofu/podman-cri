@@ -397,8 +397,9 @@ async fn create_pod(config: cri::PodSandboxConfig) -> String {
 async fn create_pod_default() -> String {
     let metadata = cri::PodSandboxMetadata {
         name: get_random_string(),
+        uid: get_random_string(),
         namespace: "default".to_string(),
-        ..Default::default()
+        attempt: 0,
     };
 
     let config = cri::PodSandboxConfig {
@@ -417,7 +418,7 @@ pub async fn pod_create_libpod(
     let config = cri::PodSandboxConfig {
         metadata: Some(cri::PodSandboxMetadata {
             name: name.clone(),
-            uid: "".to_string(),
+            uid: get_random_string(),
             namespace: payload.infra_name.unwrap_or(name.clone()),
             attempt: 0,
         }),
