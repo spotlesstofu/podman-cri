@@ -285,8 +285,8 @@ impl From<SpecGenerator> for cri::ContainerConfig {
         cri::ContainerConfig {
             metadata: Some(metadata),
             image: Some(image_spec),
-            command: value.entrypoint.unwrap(),
-            args: value.command.unwrap(),
+            command: value.entrypoint.unwrap_or_default(),
+            args: value.command.unwrap_or_default(),
             working_dir: value.work_dir.unwrap_or("/".to_string()),
             envs: value
                 .env
