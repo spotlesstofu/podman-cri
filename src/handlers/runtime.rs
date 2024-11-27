@@ -123,10 +123,15 @@ impl IntoResponse for TonicStatusWrapper {
     }
 }
 
-pub async fn container_start(Path(name): Path<String>) -> Result<StatusCode, TonicStatusWrapper> {
+async fn start_container(container_id: String) -> Result<(), tonic::Status>{
     let client = get_client();
-    let request = cri::StartContainerRequest { container_id: name };
+    let request = cri::StartContainerRequest { container_id };
     client.await.unwrap().start_container(request).await?;
+    Ok(())
+}
+
+pub async fn container_start(Path(name): Path<String>) -> Result<StatusCode, TonicStatusWrapper> {
+    start_container(name).await?;
 
     Ok(StatusCode::NO_CONTENT)
 }
