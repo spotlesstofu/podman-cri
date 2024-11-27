@@ -123,7 +123,7 @@ impl IntoResponse for TonicStatusWrapper {
     }
 }
 
-async fn start_container(container_id: String) -> Result<(), tonic::Status>{
+async fn start_container(container_id: String) -> Result<(), tonic::Status> {
     let client = get_client();
     let request = cri::StartContainerRequest { container_id };
     client.await.unwrap().start_container(request).await?;
@@ -441,16 +441,42 @@ pub async fn pod_create_libpod(
     (StatusCode::CREATED, Json(response))
 }
 
-/// pod_start_libpod responds to POST `/libpod/pods/:name/start`.
-///
-/// Returns a valid response but does nothing.
-///
-/// TODO What CRI call(s) (`rpc`) should I map this to?
+/// Start all containers in a pod.
 pub async fn pod_start_libpod(Path(name): Path<String>) -> Json<PodStartReport> {
-    let report = PodStartReport {
-        id: Some(name),
+    let filter_state = cri::ContainerStateValue {
+        state: cri::ContainerState::ContainerCreated.into(),
+    };
+
+    let filter = cri::ContainerFilter {
+        state: Some(filter_state),
+        pod_sandbox_id: name.clone(),
         ..Default::default()
     };
+
+    let containers = list_containers(Some(filter)).await;
+
+    let futures = containers
+        .into_iter()
+        .map(|container| start_container(container.id));
+
+    let results = future::join_all(futures).await;
+
+    // Iterate over results to collect error messages (if any).
+    let error_messages: Vec<String> = results
+        .into_iter()
+        .filter_map(|result| match result {
+            Ok(_) => None,
+            Err(status) => Some(status.message().to_string()),
+        })
+        .collect();
+
+    let report = PodStartReport {
+        id: Some(name),
+        errs: Some(error_messages),
+        ..Default::default()
+    };
+
+    // TODO statuscode 409 if error_messages > 0
 
     Json(report)
 }
