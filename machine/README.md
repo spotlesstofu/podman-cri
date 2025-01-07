@@ -65,6 +65,9 @@ To force the AI extension to use this setup, change the permissions for the Podm
 
 ## Peer pods
 
+> [!IMPORTANT]  
+> Below is just notes. Not tested yet.
+
 Run the cloud API adaptor (**CAA**) inside the machine:
 ```sh
 podman run -ti --rm \
