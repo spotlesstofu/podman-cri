@@ -155,6 +155,7 @@ impl From<Mount> for cri::Mount {
         cri::Mount {
             host_path: value.source.expect("mount source"),
             container_path: value.target.expect("mount target"),
+            readonly: value.read_only.unwrap_or(false),
             ..Default::default()
         }
     }
