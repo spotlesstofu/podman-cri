@@ -1,0 +1,20 @@
+{
+  "name": "my-extension",
+  "displayName": "My Hello World extension",
+  "description": "How to write my first extension",
+  "version": "0.0.1",
+  "icon": "icon.png",
+  "publisher": "tofu",
+  "engines": {
+    "podman-desktop": "latest"
+  },
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "my.first.command",
+        "title": "My First Extension: Hello World"
+      }
+    ]
+  }
+}
