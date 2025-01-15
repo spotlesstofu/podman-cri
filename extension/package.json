@@ -9,12 +9,13 @@
     "podman-desktop": "latest"
   },
   "main": "./dist/extension.js",
-  "contributes": {
-    "commands": [
-      {
-        "command": "my.first.command",
-        "title": "My First Extension: Hello World"
-      }
-    ]
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch"
+  },
+  "devDependencies": {
+    "@podman-desktop/api": "*",
+    "@types/node": "*",
+    "typescript": "*"
   }
 }
