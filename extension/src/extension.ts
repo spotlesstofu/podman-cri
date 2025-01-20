@@ -10,6 +10,9 @@ async function execPodman(args) {
 
 // Initialize the activation of the extension.
 export async function activate(extensionContext: ExtensionContext): Promise<void> {
+
+  // TODO set extensions.maxActivationTime = 3600
+
   // machine init
   try {
     await execPodman(["machine", "init", "--now"]);
@@ -29,9 +32,13 @@ export async function activate(extensionContext: ExtensionContext): Promise<void
   try {
     await execPodman(["machine", "os", "apply", "--restart", machineImage]);
   } catch (e) {
-    console.error(e.stderr);
-    extensionApi.window.showWarningMessage(`Failed machine os apply: ${e.stderr}`);
-    throw e;
+    if (e.stderr.includes("refs are equal")) {
+      // pass, image already applied
+    } else {
+      console.error(e.stderr);
+      extensionApi.window.showWarningMessage(`Failed machine os apply: ${e.stderr}`);
+      throw e;
+    }
   }
 }
 
