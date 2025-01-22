@@ -1,10 +1,10 @@
 {
-  "name": "my-extension",
-  "displayName": "My Hello World extension",
-  "description": "How to write my first extension",
+  "name": "peerpods",
+  "displayName": "peer pods",
+  "description": "The peer pods extension",
   "version": "0.0.1",
   "icon": "icon.png",
-  "publisher": "tofu",
+  "publisher": "spotlesstofu",
   "engines": {
     "podman-desktop": "latest"
   },
@@ -17,5 +17,52 @@
     "@podman-desktop/api": "*",
     "@types/node": "*",
     "typescript": "*"
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "peerpods.onboarding.setupMachine",
+        "title": "Peer pods: setup Podman Machine for peer pods"
+      },
+      {
+        "command": "peerpods.onboarding.cloudConfig",
+        "title": "Peer pods: fill in the cloud provider configuration"
+      },
+      {
+        "command": "peerpods.onboarding.startPeerpods",
+        "title": "Peer pods: start the peer pods service"
+      }
+    ]
+  },
+  "onboarding": {
+    "title": "Setup peer pods",
+    "enablement": "!onboardingContext:peerpodsIsInstalled",
+    "steps": [
+      {
+        "id": "setupMachine",
+        "title": "Prepare the Podman Machine for peer pods",
+        "command": "peerpods.onboarding.setupMachine",
+        "completionEvents": [
+          "onCommand:peerpods.onboarding.setupMachine"
+        ]
+      },
+      {
+        "id": "cloudConfig",
+        "title": "Fill in the cloud provider configuration",
+        "command": "peerpods.onboarding.cloudConfig",
+        "completionEvents": [
+          "onCommand:peerpods.onboarding.cloudConfig"
+        ]
+
+      },
+      {
+        "id": "startPeerpodsCommand",
+        "title": "Start the peer pods service",
+        "command": "peerpods.onboarding.startPeerpods",
+        "completionEvents": [
+          "onCommand:peerpods.onboarding.startPeerpods"
+        ]
+      }
+    ]
   }
 }

@@ -8,41 +8,52 @@ async function execPodman(args) {
   return await extensionApi.process.exec(command, args)
 }
 
-// Initialize the activation of the extension.
 export async function activate(extensionContext: ExtensionContext): Promise<void> {
-
-  // TODO set extensions.maxActivationTime = 3600
-
-  // machine init
-  try {
-    await execPodman(["machine", "init", "--now"]);
-  } catch (e) {
-    if (e.stderr.includes("already exists")) {
-        // pass, no need to create the machine
-    } else {
-      console.error(e.stderr);
-      extensionApi.window.showWarningMessage(`Failed machine init: ${e.stderr}`);
-      throw e;
+  const setupMachine = extensionApi.commands.registerCommand('peerpods.onboarding.setupMachine', async () => {
+    // machine init
+    try {
+      await execPodman(["machine", "init", "--now"]);
+    } catch (e) {
+      if (e.stderr.includes("already exists")) {
+          // pass, no need to create the machine
+      } else {
+        console.error(e.stderr);
+        throw e;
+      }
     }
-  }
 
-  // TODO await machine is up
+    // TODO await machine is up
 
-  // machine os apply
-  try {
-    await execPodman(["machine", "os", "apply", "--restart", machineImage]);
-  } catch (e) {
-    if (e.stderr.includes("refs are equal")) {
-      // pass, image already applied
-    } else {
-      console.error(e.stderr);
-      extensionApi.window.showWarningMessage(`Failed machine os apply: ${e.stderr}`);
-      throw e;
+    // machine os apply
+    try {
+      await execPodman(["machine", "os", "apply", "--restart", machineImage]);
+    } catch (e) {
+      if (e.stderr.includes("refs are equal")) {
+        // pass, image already applied
+      } else {
+        console.error(e.stderr);
+        throw e;
+      }
     }
-  }
+
+    extensionApi.context.setValue("peerpodsIsInstalled", "true", "onboarding")
+  })
+
+  const cloudConfig = extensionApi.commands.registerCommand('peerpods.onboarding.cloudConfig', async () => {
+  })
+
+  const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding.startPeerpods', async () => {
+  })
+
+  extensionContext.subscriptions.push(
+    setupMachine,
+    cloudConfig,
+    startPeerpods
+  )
+
+  extensionApi.context.setValue("peerpodsIsInstalled", "false", "onboarding")
 }
 
-// Deactivate the extension
 export async function deactivate(): Promise<void> {
   extensionApi.window.showWarningMessage("To fully deactivate the extension, reset the Podman Machine by running the following command:\n\n    podman machine reset");
 }
