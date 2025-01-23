@@ -32,37 +32,37 @@
         "command": "peerpods.onboarding.startPeerpods",
         "title": "Peer pods: start the peer pods service"
       }
-    ]
-  },
-  "onboarding": {
-    "title": "Setup peer pods",
-    "enablement": "!onboardingContext:peerpodsIsInstalled",
-    "steps": [
-      {
-        "id": "setupMachine",
-        "title": "Prepare the Podman Machine for peer pods",
-        "command": "peerpods.onboarding.setupMachine",
-        "completionEvents": [
-          "onCommand:peerpods.onboarding.setupMachine"
-        ]
-      },
-      {
-        "id": "cloudConfig",
-        "title": "Fill in the cloud provider configuration",
-        "command": "peerpods.onboarding.cloudConfig",
-        "completionEvents": [
-          "onCommand:peerpods.onboarding.cloudConfig"
-        ]
+    ],
 
-      },
-      {
-        "id": "startPeerpodsCommand",
-        "title": "Start the peer pods service",
-        "command": "peerpods.onboarding.startPeerpods",
-        "completionEvents": [
-          "onCommand:peerpods.onboarding.startPeerpods"
-        ]
-      }
-    ]
+    "onboarding": {
+      "title": "Setup peer pods",
+      "enablement": "!onboardingContext:peerpodsIsInstalled",
+      "steps": [
+        {
+          "id": "setupMachineCommand",
+          "title": "Prepare the Podman Machine for peer pods",
+          "command": "peerpods.onboarding.setupMachine",
+          "completionEvents": [
+            "onCommand:peerpods.onboarding.setupMachine"
+          ]
+        },
+        {
+          "id": "cloudConfigCommand",
+          "title": "Fill in the cloud provider configuration",
+          "command": "peerpods.onboarding.cloudConfig",
+          "completionEvents": [
+            "onCommand:peerpods.onboarding.cloudConfig"
+          ]
+        },
+        {
+          "id": "startPeerpodsCommand",
+          "title": "Start the peer pods service",
+          "command": "peerpods.onboarding.startPeerpods",
+          "completionEvents": [
+            "onCommand:peerpods.onboarding.startPeerpods"
+          ]
+        }
+      ]
+    }
   }
 }
