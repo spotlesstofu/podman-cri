@@ -33,7 +33,17 @@
         "title": "Peer pods: start the peer pods service"
       }
     ],
-
+    "configuration": {
+      "title": "peer pods",
+      "properties": {
+        "peerpods.envFilePath": {
+          "type": "string",
+          "format": "file",
+          "default": "",
+          "description": "File containing environment variables for peer pods"
+        }
+      }
+    },
     "onboarding": {
       "title": "Setup peer pods",
       "enablement": "!onboardingContext:peerpodsIsInstalled",
@@ -44,14 +54,6 @@
           "command": "peerpods.onboarding.setupMachine",
           "completionEvents": [
             "onCommand:peerpods.onboarding.setupMachine"
-          ]
-        },
-        {
-          "id": "cloudConfigCommand",
-          "title": "Fill in the cloud provider configuration",
-          "command": "peerpods.onboarding.cloudConfig",
-          "completionEvents": [
-            "onCommand:peerpods.onboarding.cloudConfig"
           ]
         },
         {
