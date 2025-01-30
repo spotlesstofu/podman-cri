@@ -3,7 +3,7 @@ import * as extensionApi from '@podman-desktop/api';
 
 const machineImage = "quay.io/spotlesstofu/podman-cri:5.1"
 const apiPort = "12345"
-const caaImage = "quay.io/confidential-containers/cloud-api-adaptor:latest"
+const caaImage = "quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64"
 
 async function execPodman(args) {
   const command = "podman";
@@ -39,7 +39,7 @@ const setupMachine = extensionApi.commands.registerCommand('peerpods.onboarding.
 })
 
 const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding.startPeerpods', async () => {
-  await execPodman(["machine", "ssh", "--username", "root", "mkdir -p /run/peerpods"])
+  await execPodman(["machine", "ssh", "--username", "root", "mkdir -p /run/peerpod && chown core: /run/peerpod"])
   const peerpodsConfiguration = extensionApi.configuration.getConfiguration("peerpods")
   const envFilePath = await peerpodsConfiguration.get("envFilePath")
   const envFiles: string[] = []
@@ -56,7 +56,7 @@ const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding
     ],
     EnvFiles: envFiles,
     Labels: { "peer-pods-service": "true" },
-    Volumes: { "/run/peerpods:/run/peerpods": {} },
+    Volumes: { "/run/peerpod:/run/peerpod:z": {} },
     Start: true,
     Detach: true
   }
