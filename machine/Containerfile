@@ -1,12 +1,16 @@
 # Layer on top of the Podman machine image.
-FROM quay.io/podman/machine-os:5.1
+FROM quay.io/podman/machine-os:5.3
 
 RUN \
 # Install dependencies.
 rpm-ostree install cri-o containernetworking-plugins kata-containers && \
 # Enable services.
 systemctl enable crio && \
-systemctl enable podman
+systemctl enable podman && \
+# Create directories.
+mkdir -p /var/log/pods && \
+mkdir -p /run/peerpod && \
+chown core: /run/peerpod
 
 # Copy configuration.
 COPY kata.toml /opt/kata/configuration-remote.toml
