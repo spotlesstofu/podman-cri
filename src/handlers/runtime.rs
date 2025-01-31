@@ -89,18 +89,29 @@ pub async fn container_list() -> Json<Vec<Container>> {
     Json(podman_containers)
 }
 
+pub async fn container_status(container_id: String) -> Option<cri::ContainerStatus> {
+    let request = cri::ContainerStatusRequest {
+        container_id,
+        verbose: false,
+    };
+    let response = get_client()
+        .await
+        .unwrap()
+        .container_status(request)
+        .await
+        .unwrap();
+    response.into_inner().status
+}
+
 pub async fn container_inspect(
     Path(name): Path<String>,
 ) -> Result<Json<ContainerJson>, StatusCode> {
-    let filter = cri::ContainerFilter {
-        id: name,
-        ..Default::default()
-    };
-    let cri_container: Option<cri::Container> = list_containers(Some(filter)).await.pop();
-    match cri_container {
-        Some(cri_container) => {
-            let podman_container: ContainerJson = cri_container.into();
-            Ok(Json(podman_container))
+    let status = container_status(name).await;
+
+    match status {
+        Some(status) => {
+            let container: ContainerJson = status.into();
+            Ok(Json(container))
         }
         None => Err(StatusCode::NOT_FOUND),
     }
@@ -419,7 +430,7 @@ async fn create_pod_default() -> String {
 pub async fn pod_create_libpod(
     Json(payload): Json<PodSpecGenerator>,
 ) -> (StatusCode, Json<IdResponse>) {
-    let name = payload.name.unwrap_or(get_random_string());
+    let name = payload.name.unwrap_or_else(get_random_string);
 
     let config = cri::PodSandboxConfig {
         metadata: Some(cri::PodSandboxMetadata {
