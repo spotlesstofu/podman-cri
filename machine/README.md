@@ -13,7 +13,7 @@ flatpak install io.podman_desktop.PodmanDesktop
 
 ```sh
 podman machine init --now
-podman machine os apply --restart 'quay.io/spotlesstofu/podman-cri:5.1'
+podman machine os apply --restart 'quay.io/spotlesstofu/podman-cri:5.3'
 ```
 
 Alternatively, build and push the Containerfile yourself and use that.
