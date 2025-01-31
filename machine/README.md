@@ -65,7 +65,7 @@ To force the AI extension to use this setup, change the permissions for the Podm
 
 ## Peer pods
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > Below is just notes. Not tested yet.
 
 Run the cloud API adaptor (**CAA**) inside the machine:
@@ -74,7 +74,8 @@ podman run -ti --rm \
 --entrypoint /usr/local/bin/cloud-api-adaptor \
 --env-file caa.env \
 -v /run/peerpods:/run/peerpods \
-quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64 azure \
+quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64 \
+azure \
 -disable-cvm \
 -subscriptionid "${AZURE_SUBSCRIPTION_ID}" \
 -region "${AZURE_REGION}" \
