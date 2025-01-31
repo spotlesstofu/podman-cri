@@ -2,7 +2,6 @@ import type { ExtensionContext } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
 const machineImage = "quay.io/spotlesstofu/podman-cri:5.3"
-const apiPort = "12345"
 const caaImage = "quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64"
 
 async function execPodman(args) {
@@ -72,7 +71,7 @@ const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding
 })
 
 async function updateConfiguration() {
-
+  // TODO
 }
 
 function watchConfiguration() {
