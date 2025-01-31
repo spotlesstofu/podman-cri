@@ -9,8 +9,7 @@ systemctl enable crio && \
 systemctl enable podman && \
 # Create directories.
 mkdir -p /var/log/pods && \
-mkdir -p /run/peerpod && \
-chown core: /run/peerpod
+mkdir -p /run/peerpod
 
 # Copy configuration.
 COPY kata.toml /opt/kata/configuration-remote.toml
