@@ -279,7 +279,7 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
 pub async fn container_create(
     Json(params): Json<CreateContainerConfig>,
 ) -> (StatusCode, Json<ContainerCreateResponse>) {
-    let pod_sandbox_id = create_pod_default().await;
+    let pod_sandbox_id = create_pod_default("").await;
     let config: cri::ContainerConfig = params.into();
 
     create_container(config, pod_sandbox_id).await
@@ -392,11 +392,11 @@ fn get_random_string() -> String {
     Uuid::new_v4().to_string().split_at(8).0.to_string()
 }
 
-async fn create_pod(config: cri::PodSandboxConfig) -> String {
+async fn create_pod(config: cri::PodSandboxConfig, runtime_handler: &str) -> String {
     let client = get_client();
     let message = cri::RunPodSandboxRequest {
         config: Some(config),
-        ..Default::default()
+        runtime_handler: runtime_handler.to_string(),
     };
 
     let request = Request::new(message);
@@ -411,7 +411,7 @@ async fn create_pod(config: cri::PodSandboxConfig) -> String {
     response.pod_sandbox_id
 }
 
-async fn create_pod_default() -> String {
+async fn create_pod_default(runtime_handler: &str) -> String {
     let metadata = cri::PodSandboxMetadata {
         name: get_random_string(),
         uid: get_random_string(),
@@ -423,7 +423,7 @@ async fn create_pod_default() -> String {
         metadata: Some(metadata),
         ..Default::default()
     };
-    create_pod(config).await
+    create_pod(config, runtime_handler).await
 }
 
 /// pod_create_libpod responds to POST `/libpod/pods/create`.
@@ -447,7 +447,7 @@ pub async fn pod_create_libpod(
         ..Default::default()
     };
 
-    let id = create_pod(config).await;
+    let id = create_pod(config, "").await;
     let response = IdResponse::new(id);
 
     (StatusCode::CREATED, Json(response))
