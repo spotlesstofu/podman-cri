@@ -1,0 +1,8 @@
+[crio]
+storage_option = [
+  "overlay.skip_mount_home=true",
+]
+
+[crio.runtime]
+log_level = "debug"
+default_runtime = "kata-remote"

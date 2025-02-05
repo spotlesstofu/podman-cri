@@ -12,5 +12,4 @@ mkdir -p /var/log/pods && \
 mkdir -p /run/peerpod
 
 # Copy configuration.
-COPY kata.toml /opt/kata/configuration-remote.toml
-COPY crio.conf /etc/crio/crio.conf.d/50-kata-remote
+COPY crio/* /etc/crio/crio.conf.d/
