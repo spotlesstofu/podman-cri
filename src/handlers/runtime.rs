@@ -7,9 +7,9 @@ use tonic::Request;
 use uuid::Uuid;
 
 use podman_api::models::{
-    Container, ContainerCreateResponse, ContainerJson, ContainerStartQueryParams,
-    CreateContainerConfig, IdResponse, ListContainer, ListPodContainer, ListPodsReport, Mount,
-    PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport, SpecGenerator,
+    Config, Container, ContainerCreateResponse, ContainerJson, ContainerState,
+    CreateContainerConfig, Health, IdResponse, ListContainer, ListPodContainer, ListPodsReport,
+    Mount, PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport, SpecGenerator,
 };
 
 use crate::cri;
@@ -28,10 +28,97 @@ impl From<cri::Container> for Container {
     }
 }
 
-impl From<cri::Container> for ContainerJson {
-    fn from(value: cri::Container) -> Self {
-        ContainerJson {
-            ..Default::default()
+fn state_to_string(state: cri::ContainerState) -> String {
+    state.as_str_name().to_lowercase().replace("_", " ")
+}
+
+impl From<cri::ContainerStatus> for ContainerState {
+    fn from(value: cri::ContainerStatus) -> Self {
+        let state = value.state();
+
+        Self {
+            dead: Some(false),
+            error: Some(value.message),
+            exit_code: Some(value.exit_code.into()),
+            finished_at: Some(value.finished_at.to_string()),
+            health: Some(Health::new()),
+            oom_killed: Some(value.reason == "OOMKilled"),
+            paused: Some(false),
+            pid: Some(1234),
+            restarting: Some(false),
+            running: Some(state == cri::ContainerState::ContainerRunning),
+            started_at: Some(value.started_at.to_string()),
+            status: Some(state.as_str_name().to_string()),
+        }
+    }
+}
+
+impl From<cri::ContainerStatus> for ContainerJson {
+    fn from(value: cri::ContainerStatus) -> Self {
+        let state: ContainerState = value.clone().into();
+
+        // name, attempt
+        let metadata = value.metadata.unwrap();
+        // mem & cpu
+        // let resources = value.resources.unwrap().linux.unwrap();
+        // uid, gid, groups
+        // let user = value.user.unwrap().linux.unwrap();
+
+        // let mounts: Vec<MountPoint> = value.mounts.into();
+
+        Self {
+            config: Some(Config {
+                args_escaped: Some(false),
+                attach_stderr: Some(false),
+                attach_stdin: Some(false),
+                attach_stdout: Some(false),
+                cmd: Some(["cmd".to_string()].into()),
+                domainname: Some("domainname".to_string()),
+                entrypoint: Some(["entrypoint".to_string()].into()),
+                env: Some(["env".to_string()].into()),
+                exposed_ports: None,
+                healthcheck: None,
+                hostname: Some("hostname".to_string()),
+                image: Some(value.image_id),
+                labels: Some(value.labels),
+                mac_address: None,
+                network_disabled: Some(false),
+                on_build: None,
+                open_stdin: Some(false),
+                shell: None,
+                stdin_once: Some(false),
+                stop_signal: None,
+                stop_timeout: None,
+                tty: Some(false),
+                user: None,
+                volumes: None,
+                working_dir: Some("/".to_string()),
+            }),
+            created: Some(value.created_at.to_string()),
+            id: Some(value.id.clone()),
+            image: value.image.map(|spec| spec.image),
+            name: Some(metadata.name),
+            state: Some(state),
+            app_armor_profile: None,
+            args: None,
+            driver: None,
+            exec_ids: None,
+            graph_driver: None,
+            host_config: None,
+            hostname_path: None,
+            hosts_path: None,
+            log_path: None,
+            mount_label: None,
+            mounts: None,
+            network_settings: None,
+            node: None,
+            path: None,
+            platform: None,
+            process_label: None,
+            resolv_conf_path: None,
+            restart_count: None,
+            size_root_fs: None,
+            size_rw: None,
         }
     }
 }
@@ -39,18 +126,12 @@ impl From<cri::Container> for ContainerJson {
 impl From<cri::Container> for ListContainer {
     fn from(container: cri::Container) -> Self {
         ListContainer {
-            id: Some(container.id),
-            image: Some(container.image_ref),
-            image_id: Some(container.image_id),
+            id: Some(container.id.clone()),
+            image: Some(container.image_ref.clone()),
+            image_id: Some(container.image_id.clone()),
             created: chrono::DateTime::from_timestamp(container.created_at / 1_000_000, 0),
             created_at: Some(container.created_at.to_string()),
-            state: Some(
-                cri::ContainerState::try_from(container.state)
-                    .unwrap()
-                    .as_str_name()
-                    .to_lowercase()
-                    .replace("_", " "),
-            ),
+            state: Some(state_to_string(container.state())),
             labels: Some(container.labels),
             ..Default::default()
         }
@@ -62,7 +143,8 @@ impl From<cri::Container> for ListPodContainer {
         ListPodContainer {
             id: Some(value.id.clone()),
             status: Some(value.state().as_str_name().to_string()),
-            ..Default::default()
+            names: Some(value.id),
+            restart_count: Some(0),
         }
     }
 }
@@ -224,6 +306,9 @@ async fn create_container(
     let id = response.container_id;
     let warnings = Vec::new();
     let response = ContainerCreateResponse { id, warnings };
+
+    // TODO save the config for future reference,
+    // it's not possible to retrieve it from the CRI
 
     (StatusCode::CREATED, Json(response))
 }
