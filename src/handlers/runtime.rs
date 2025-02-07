@@ -279,8 +279,16 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
 pub async fn container_create(
     Json(params): Json<CreateContainerConfig>,
 ) -> (StatusCode, Json<ContainerCreateResponse>) {
-    let pod_sandbox_id = create_pod_default("").await;
     let config: cri::ContainerConfig = params.into();
+
+    let runtime_handler;
+    if config.labels.contains_key("peer-pods-service") {
+        runtime_handler = "runc";
+    } else {
+        runtime_handler = "";
+    }
+
+    let pod_sandbox_id = create_pod_default(runtime_handler).await;
 
     create_container(config, pod_sandbox_id).await
 }
