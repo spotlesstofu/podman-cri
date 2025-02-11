@@ -12,4 +12,4 @@ mkdir -p /var/log/pods && \
 mkdir -p /run/peerpod
 
 # Copy configuration.
-COPY crio/* /etc/crio/crio.conf.d/
+COPY crio.conf.d/* /etc/crio/crio.conf.d/
