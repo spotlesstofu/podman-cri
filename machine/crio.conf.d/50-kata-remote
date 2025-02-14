@@ -2,5 +2,5 @@
  runtime_path = "/usr/bin/containerd-shim-kata-v2"
  runtime_type = "vm"
  runtime_root = "/run/vc"
- runtime_config_path = "/var/opt/kata/configuration-remote.toml"
+ runtime_config_path = "/opt/kata/configuration-remote.toml"
  privileged_without_host_devices = true

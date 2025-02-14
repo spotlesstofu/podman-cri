@@ -13,3 +13,4 @@ mkdir -p /run/peerpod
 
 # Copy configuration.
 COPY crio.conf.d/* /etc/crio/crio.conf.d/
+COPY kata opt/
