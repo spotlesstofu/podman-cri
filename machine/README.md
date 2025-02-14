@@ -12,7 +12,7 @@ flatpak install io.podman_desktop.PodmanDesktop
 ## Init machine
 
 ```sh
-podman machine init --now
+podman machine init --rootful --now
 podman machine os apply --restart 'quay.io/spotlesstofu/podman-cri:5.3'
 ```
 

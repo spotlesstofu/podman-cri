@@ -12,7 +12,7 @@ async function execPodman(args) {
 const setupMachine = extensionApi.commands.registerCommand('peerpods.onboarding.setupMachine', async () => {
   // machine init
   try {
-    await execPodman(["machine", "init", "--now"]);
+    await execPodman(["machine", "init", "--rootful", "--now"]);
   } catch (e) {
     if (e.stderr.includes("already exists")) {
       // pass, no need to create the machine
