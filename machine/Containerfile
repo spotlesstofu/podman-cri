@@ -6,11 +6,19 @@ RUN \
 rpm-ostree install cri-o containernetworking-plugins kata-containers && \
 # Enable services.
 systemctl enable crio && \
-systemctl enable podman && \
 # Create directories.
 mkdir -p /var/log/pods && \
 mkdir -p /run/peerpod
 
 # Copy configuration.
 COPY crio.conf.d/* /etc/crio/crio.conf.d/
-COPY kata opt/
+COPY kata/* /etc/kata/
+
+# Enable custom services.
+COPY systemd/system/* /etc/systemd/system/
+COPY podman-cri /usr/bin/
+RUN \
+systemctl disable podman.socket && \
+systemctl disable podman.service && \
+systemctl enable podman2 && \
+systemctl enable podman-cri

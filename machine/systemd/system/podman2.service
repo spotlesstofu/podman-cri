@@ -1,0 +1,12 @@
+[Unit]
+Description=Podman API Service on secondary socket path
+StartLimitIntervalSec=0
+
+[Service]
+Type=exec
+KillMode=process
+Environment=LOGGING="--log-level=info"
+ExecStart=/usr/bin/podman $LOGGING system service -t 0 "unix:///run/podman/podman2.sock"
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,10 @@
+[Unit]
+Description=Podman CRI Service
+
+[Service]
+Environment=PODMAN_ENDPOINT="/run/podman/podman2.sock"
+Environment=PODMAN_CRI_ENDPOINT="/run/podman/podman.sock"
+ExecStart=/usr/bin/podman-cri
+
+[Install]
+WantedBy=default.target
