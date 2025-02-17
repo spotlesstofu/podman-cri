@@ -15,6 +15,10 @@ so CRI-O can access transparently any image that Podman pulls or builds.
 Just make sure that CRI-O and Podman are both running as the root user.
 See containers-storage.conf(5).
 
+# Install
+
+See [extension/README.md](extension/README.md).
+
 # Build
 
 Install dependencies:
@@ -28,14 +32,6 @@ Build:
 ```
 cargo build
 ```
-
-
-# Test and demo
-
-To test and demo this project, use a Podman machine.
-
-See [machine/README.md](machine/README.md).
-
 
 # Configuration
 
