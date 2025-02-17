@@ -39,6 +39,7 @@ const setupMachine = extensionApi.commands.registerCommand('peerpods.onboarding.
 
 const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding.startPeerpods', async () => {
   await execPodman(["machine", "ssh", "--username", "root", "mkdir -p /run/peerpod && chown core: /run/peerpod"])
+
   const peerpodsConfiguration = extensionApi.configuration.getConfiguration("peerpods")
   const envFilePath = await peerpodsConfiguration.get("envFilePath")
   const envFiles: string[] = []
@@ -47,6 +48,7 @@ const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding
   } else {
     throw "envFilePath not valid"
   }
+
   const containerOptions = {
     Image: caaImage,
     Entrypoint: ["/bin/sh", "-c"],
@@ -59,14 +61,27 @@ const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding
     Start: true,
     Detach: true
   }
-  const engineInfos = await extensionApi.containerEngine.listInfos()
-  const engineId = engineInfos[1].engineId
-  const connections = await extensionApi.provider.getContainerConnections()
-  // TODO expect more than one engine
-  const connection = connections[1]
-  console.log(connection.providerId)
-  await extensionApi.containerEngine.pullImage(connection.connection, containerOptions.Image, _event => { })
-  await extensionApi.containerEngine.createContainer(engineId, containerOptions)
+
+  const connectionName = 'Podman Machine'
+  const engine = extensionApi.provider.getContainerConnections()
+    .filter(connection => connection.connection.type === 'podman')
+    .find(connection => connection.connection.displayName === connectionName)
+  if (!engine) {
+    throw new Error(`no podman connection found with name ${connectionName}`);
+  }
+
+  const image = containerOptions.Image
+
+  await extensionApi.containerEngine.pullImage(engine.connection, image, _event => { })
+
+  const imageInfo = (await extensionApi.containerEngine.listImages({
+    provider: engine.connection,
+  } as extensionApi.ListImagesOptions)).find(imageInfo => imageInfo.RepoTags?.some(tag => tag === image))
+
+  if (imageInfo === undefined) { throw new Error(`image ${image} not found.`) }
+
+  await extensionApi.containerEngine.createContainer(imageInfo.engineId, containerOptions)
+
   extensionApi.context.setValue("peerpodsIsInstalled", true, "onboarding")
 })
 
