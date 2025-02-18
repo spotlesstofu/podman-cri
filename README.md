@@ -94,8 +94,9 @@ Inspect Podman API calls:
 ```command
 $ podman system info | grep podman.sock
 path: /run/user/1000/podman/podman.sock
-$ mv /run/user/1000/podman/podman.sock /run/user/1000/podman/podman2.sock
-$ socat -t100 -v UNIX-LISTEN:/run/user/1000/podman/podman.sock,mode=777,reuseaddr,fork UNIX-CONNECT:/run/user/1000/podman/podman2.sock 2>&1 | grep -E 'GET|PUT|POST|DELETE'
+$ cd /run/user/1000/podman/
+$ mv podman.sock podman2.sock
+$ socat -t100 -v UNIX-LISTEN:podman.sock,mode=777,reuseaddr,fork UNIX-CONNECT:podman2.sock 2>&1 | tee /tmp/podman-socket.out
 ```
 
 Generate Rust code from the OpenAPI spec:
