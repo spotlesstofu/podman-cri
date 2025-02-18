@@ -1,5 +1,6 @@
 use axum::response::IntoResponse;
 use futures::future;
+use podman_api::types::Object;
 use std::collections::HashMap;
 
 use axum::{extract::Path, http::StatusCode, Json};
@@ -254,6 +255,17 @@ impl From<Mount> for cri::Mount {
     }
 }
 
+impl From<(String, Object)> for cri::Mount {
+    fn from(value: (String, Object)) -> Self {
+        let mut split = value.0.split(":");
+        cri::Mount {
+            host_path: split.next().expect("mount source").to_string(),
+            container_path: split.next().expect("mount target").to_string(),
+            ..Default::default()
+        }
+    }
+}
+
 impl From<String> for cri::KeyValue {
     fn from(env: String) -> Self {
         let (key, value) = env.split_once('=').expect("env key/value delimiter");
@@ -355,6 +367,12 @@ impl From<CreateContainerConfig> for cri::ContainerConfig {
                 .map(|item| -> cri::KeyValue { item.into() })
                 .collect(),
             labels: value.labels.unwrap_or_default(),
+            mounts: value
+                .volumes
+                .unwrap_or_default()
+                .into_iter()
+                .map(|item| -> cri::Mount { item.into() })
+                .collect(),
             ..Default::default()
         }
     }
