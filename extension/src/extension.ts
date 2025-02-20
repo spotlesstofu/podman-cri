@@ -1,7 +1,7 @@
 import type { ExtensionContext } from '@podman-desktop/api';
 import * as extensionApi from '@podman-desktop/api';
 
-const machineImage = "quay.io/spotlesstofu/podman-cri:5.3"
+const machineImage = "quay.io/spotlesstofu/podman-cri:5.5"
 const caaImage = "quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64"
 
 async function execPodman(args) {
