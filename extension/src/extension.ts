@@ -53,7 +53,7 @@ const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding
     Image: caaImage,
     Entrypoint: ["/bin/sh", "-c"],
     Cmd: [
-      "echo nameserver 1.1.1.1 >> /etc/resolv.conf; /usr/local/bin/cloud-api-adaptor azure -disable-cvm -subscriptionid $AZURE_SUBSCRIPTION_ID -region $AZURE_REGION -instance-size $AZURE_INSTANCE_SIZE -resourcegroup $AZURE_RESOURCE_GROUP -vxlan-port 8472 -subnetid $AZURE_SUBNET_ID -securitygroupid $AZURE_NSG_ID -imageid $AZURE_IMAGE_ID"
+      "echo nameserver 1.1.1.1 >> /etc/resolv.conf; /usr/local/bin/cloud-api-adaptor azure -disable-cvm -use-public-ip -subscriptionid $AZURE_SUBSCRIPTION_ID -region $AZURE_REGION -instance-size $AZURE_INSTANCE_SIZE -resourcegroup $AZURE_RESOURCE_GROUP -vxlan-port 8472 -subnetid $AZURE_SUBNET_ID -securitygroupid $AZURE_NSG_ID -imageid $AZURE_IMAGE_ID"
     ],
     EnvFiles: envFiles,
     Labels: { "peer-pods-service": "true" },
