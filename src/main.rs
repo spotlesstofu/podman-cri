@@ -28,22 +28,10 @@ async fn main() {
     let app = Router::new()
         // compat containers routes
         .route("/containers/json", get(handlers::container_list))
-        .route(
-            "/containers/create",
-            post(handlers::container_create),
-        )
-        .route(
-            "/containers/:name/json",
-            get(handlers::container_inspect),
-        )
-        .route(
-            "/containers/:name/start",
-            post(handlers::container_start),
-        )
-        .route(
-            "/containers/:name/stop",
-            post(handlers::container_stop),
-        )
+        .route("/containers/create", post(handlers::container_create))
+        .route("/containers/:name/json", get(handlers::container_inspect))
+        .route("/containers/:name/start", post(handlers::container_start))
+        .route("/containers/:name/stop", post(handlers::container_stop))
         // libpod containers routes
         .route(
             "/v4.2.0/libpod/containers/json",
@@ -54,10 +42,7 @@ async fn main() {
             post(handlers::container_create_libpod),
         )
         // libpod pods routes
-        .route(
-            "/v4.2.0/libpod/pods/json",
-            get(handlers::pod_list_libpod),
-        )
+        .route("/v4.2.0/libpod/pods/json", get(handlers::pod_list_libpod))
         .route(
             "/v4.2.0/libpod/pods/create",
             post(handlers::pod_create_libpod),
