@@ -27,57 +27,57 @@ async fn main() {
 
     let app = Router::new()
         // compat containers routes
-        .route("/containers/json", get(handlers::runtime::container_list))
+        .route("/containers/json", get(handlers::container_list))
         .route(
             "/containers/create",
-            post(handlers::runtime::container_create),
+            post(handlers::container_create),
         )
         .route(
             "/containers/:name/json",
-            get(handlers::runtime::container_inspect),
+            get(handlers::container_inspect),
         )
         .route(
             "/containers/:name/start",
-            post(handlers::runtime::container_start),
+            post(handlers::container_start),
         )
         .route(
             "/containers/:name/stop",
-            post(handlers::runtime::container_stop),
+            post(handlers::container_stop),
         )
         // libpod containers routes
         .route(
             "/v4.2.0/libpod/containers/json",
-            get(handlers::runtime::container_list_libpod),
+            get(handlers::container_list_libpod),
         )
         .route(
             "/v4.2.0/libpod/containers/create",
-            post(handlers::runtime::container_create_libpod),
+            post(handlers::container_create_libpod),
         )
         // libpod pods routes
         .route(
             "/v4.2.0/libpod/pods/json",
-            get(handlers::runtime::pod_list_libpod),
+            get(handlers::pod_list_libpod),
         )
         .route(
             "/v4.2.0/libpod/pods/create",
-            post(handlers::runtime::pod_create_libpod),
+            post(handlers::pod_create_libpod),
         )
         .route(
             "/v4.2.0/libpod/pods/:name/start",
-            post(handlers::runtime::pod_start_libpod),
+            post(handlers::pod_start_libpod),
         )
         .route(
             "/v4.2.0/libpod/pods/:name/stop",
-            post(handlers::runtime::pod_stop_libpod),
+            post(handlers::pod_stop_libpod),
         )
         .route(
             "/v4.2.0/libpod/pods/:name",
-            delete(handlers::runtime::pod_delete_libpod),
+            delete(handlers::pod_delete_libpod),
         )
         // reply to ping
-        .route("/_ping", get(handlers::runtime::ping))
-        .route("/cri/_ping", get(handlers::runtime::ping))
-        .route("/cri/version", get(handlers::runtime::version))
+        .route("/_ping", get(handlers::ping))
+        .route("/cri/_ping", get(handlers::ping))
+        .route("/cri/version", get(handlers::version))
         // forward to podman all the image-related paths
         // CRI-O and Podman (root user) share the same storage for images,
         // so CRI-O can access any image pulled or built by Podman.
