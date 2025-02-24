@@ -1,6 +1,6 @@
 # Podman machine
 
-Extend the Podman machine to test and demo this project.
+Manual setup of the Podman machine. For development only.
 
 ## Requirements
 
@@ -39,28 +39,3 @@ Either:
     ```
     sudo chown root: /run/user/1000/podman/podman.sock
     ```
-## Peer pods
-
-> [!IMPORTANT]
-> Below is just notes. Not tested yet.
-
-Run the cloud API adaptor (**CAA**) inside the machine:
-```sh
-podman run -ti --rm \
---entrypoint /usr/local/bin/cloud-api-adaptor \
---env-file caa.env \
--v /run/peerpods:/run/peerpods \
-quay.io/confidential-containers/cloud-api-adaptor:v0.8.2-amd64 \
-azure \
--disable-cvm \
--subscriptionid "${AZURE_SUBSCRIPTION_ID}" \
--region "${AZURE_REGION}" \
-
--instance-size "${AZURE_INSTANCE_SIZE}" \
--resourcegroup "${AZURE_RESOURCE_GROUP}" \
--vxlan-port 8472 \
--subnetid "${AZURE_SUBNET_ID}" \
--securitygroupid "${AZURE_NSG_ID}" \
--imageid "${AZURE_IMAGE_ID}" \
--disable-cvm
-```

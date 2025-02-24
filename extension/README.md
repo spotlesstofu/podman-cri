@@ -2,14 +2,16 @@
 
 ## Install
 
-On Podman Desktop:
-
-1. Open the Extensions tab.
+1. Open Podman Desktop.
+1. Go to the Extensions tab.
 1. Push "Install custom".
 1. Fill in the "OCI image" field with the following:
     ```
     quay.io/spotlesstofu/peer-pods-extension
     ```
+1. Wait for the extension to install.
+1. Populate the Preferences.
+1. Run the Onboarding.
 
 ## Development
 
