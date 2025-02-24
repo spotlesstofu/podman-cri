@@ -53,25 +53,6 @@ Podman usually listens on:
 OpenAPI source:
 - https://storage.googleapis.com/libpod-master-releases/swagger-latest.yaml
 
-Endpoints to implement in this project:
-```
-GET /containers/{id}/json
-DELETE /libpod/pods/{id}
-GET /containers/json?all=true
-GET /events
-GET /_ping
-GET /libpod/containers/json?all=true
-GET /libpod/images/json
-GET /libpod/info
-GET /libpod/pods/json
-GET /volumes
-POST /build?dockerfile=&labels=
-POST /containers/{id}/stop?abortSignal=
-POST /libpod/containers/create
-POST /libpod/pods/{id}/start
-POST /libpod/pods/{id}/stop
-POST /libpod/pods/create
-```
 
 ## CRI API
 
