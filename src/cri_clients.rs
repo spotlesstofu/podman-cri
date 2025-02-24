@@ -3,9 +3,7 @@ use std::error::Error;
 use tokio::net::UnixStream;
 use tonic::transport::{Channel, Endpoint, Uri};
 
-use crate::cri::{
-    image_service_client::ImageServiceClient, runtime_service_client::RuntimeServiceClient,
-};
+use crate::cri::runtime_service_client::RuntimeServiceClient;
 
 async fn get_channel() -> Result<Channel, Box<dyn Error>> {
     // We will ignore the http uri and connect to the Unix socket.
@@ -23,11 +21,5 @@ async fn get_channel() -> Result<Channel, Box<dyn Error>> {
 pub async fn get_client() -> Result<RuntimeServiceClient<Channel>, Box<dyn Error>> {
     let channel = get_channel().await?;
     let client = RuntimeServiceClient::new(channel);
-    Ok(client)
-}
-
-pub async fn get_image_client() -> Result<ImageServiceClient<Channel>, Box<dyn Error>> {
-    let channel = get_channel().await?;
-    let client = ImageServiceClient::new(channel);
     Ok(client)
 }
