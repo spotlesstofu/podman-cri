@@ -16,6 +16,8 @@ use podman_api::models::{
 use crate::cri;
 use crate::cri_clients::get_client;
 
+const LOCAL_RUNTIME_HANDLER: &str = "runc";
+
 impl From<cri::Container> for Container {
     fn from(value: cri::Container) -> Self {
         Container {
@@ -394,7 +396,7 @@ pub async fn container_create(
 
     let runtime_handler;
     if config.labels.contains_key("peer-pods-service") {
-        runtime_handler = "runc";
+        runtime_handler = LOCAL_RUNTIME_HANDLER;
     } else {
         runtime_handler = "";
     }
