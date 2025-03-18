@@ -41,7 +41,7 @@ async fn main() {
         // forward to podman all the other paths we don't want to handle
         .route("/_ping", any(reverse_proxy))
         .route("/info", any(reverse_proxy))
-        .route("/images/*path", get(any(reverse_proxy)));
+        .route("/images/*path", any(reverse_proxy));
 
     let app = Router::new()
         // compat containers routes
