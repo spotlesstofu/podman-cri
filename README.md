@@ -19,6 +19,14 @@ See containers-storage.conf(5).
 
 See [extension/README.md](extension/README.md).
 
+# CLI Usage
+
+Use the Podman Machine URL when running `podman` commands:
+```
+podman --url 'unix:///run/user/1000/podman/podman-machine-default-api.sock' ...
+```
+
+
 # Build
 
 Install dependencies:
@@ -101,4 +109,9 @@ index 1af1dde..d58b6b2 100644
 
  #[cfg(feature = "server")]
  use crate::header;
+```
+
+Copy a file into the machine:
+```
+cat target/debug/podman-cri | podman machine ssh "cat > podman-cri"
 ```
