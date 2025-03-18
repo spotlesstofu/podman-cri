@@ -399,7 +399,7 @@ pub async fn container_create(
     if config.labels.contains_key("peer-pods-service") {
         runtime_handler = LOCAL_RUNTIME_HANDLER;
     } else {
-        runtime_handler = "";
+        runtime_handler = DEFAULT_RUNTIME_HANDLER;
     }
 
     let pod_sandbox_id = create_pod_default(runtime_handler).await;
@@ -572,7 +572,7 @@ pub async fn pod_create_libpod(
         ..Default::default()
     };
 
-    let id = create_pod(config, "").await;
+    let id = create_pod(config, DEFAULT_RUNTIME_HANDLER).await;
     let response = IdResponse::new(id);
 
     (StatusCode::CREATED, Json(response))
