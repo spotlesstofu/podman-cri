@@ -30,8 +30,6 @@ pub async fn reverse_proxy(req: Request<Body>) -> Result<Response, StatusCode> {
         .body(Full::from(bytes))
         .expect("request builder");
 
-    // TODO add parts.headers to req?
-
     let client: Client<UnixConnector, Full<Bytes>> = Client::unix();
     let response = client
         .request(request)
