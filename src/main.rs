@@ -25,6 +25,20 @@ async fn main() {
         // .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .init();
 
+    let libpod_router = Router::new()
+        // libpod containers routes
+        .route("/containers/json", get(handlers::container_list_libpod))
+        .route(
+            "/containers/create",
+            post(handlers::container_create_libpod),
+        )
+        // libpod pods routes
+        .route("/pods/json", get(handlers::pod_list_libpod))
+        .route("/pods/create", post(handlers::pod_create_libpod))
+        .route("/pods/:name/start", post(handlers::pod_start_libpod))
+        .route("/pods/:name/stop", post(handlers::pod_stop_libpod))
+        .route("/pods/:name", delete(handlers::pod_delete_libpod));
+
     let app = Router::new()
         // compat containers routes
         .route("/containers/json", get(handlers::container_list))
@@ -32,33 +46,6 @@ async fn main() {
         .route("/containers/:name/json", get(handlers::container_inspect))
         .route("/containers/:name/start", post(handlers::container_start))
         .route("/containers/:name/stop", post(handlers::container_stop))
-        // libpod containers routes
-        .route(
-            "/v4.2.0/libpod/containers/json",
-            get(handlers::container_list_libpod),
-        )
-        .route(
-            "/v4.2.0/libpod/containers/create",
-            post(handlers::container_create_libpod),
-        )
-        // libpod pods routes
-        .route("/v4.2.0/libpod/pods/json", get(handlers::pod_list_libpod))
-        .route(
-            "/v4.2.0/libpod/pods/create",
-            post(handlers::pod_create_libpod),
-        )
-        .route(
-            "/v4.2.0/libpod/pods/:name/start",
-            post(handlers::pod_start_libpod),
-        )
-        .route(
-            "/v4.2.0/libpod/pods/:name/stop",
-            post(handlers::pod_stop_libpod),
-        )
-        .route(
-            "/v4.2.0/libpod/pods/:name",
-            delete(handlers::pod_delete_libpod),
-        )
         // reply to ping
         .route("/_ping", get(handlers::ping))
         .route("/cri/_ping", get(handlers::ping))
@@ -67,12 +54,14 @@ async fn main() {
         // CRI-O and Podman (root user) share the same storage for images,
         // so CRI-O can access any image pulled or built by Podman.
         .route("/images/*path", any(reverse_proxy))
-        .route("/v4.2.0/libpod/images/*path", get(any(reverse_proxy)))
         .route("/build", post(reverse_proxy))
         // forward to podman all the other paths we don't want to handle
-        .route("/v4.2.0/libpod/info", any(reverse_proxy))
         .route("/events", any(reverse_proxy))
         .route("/volumes", post(reverse_proxy))
+        .route("/:api_version/libpod/info", any(reverse_proxy))
+        .route("/:api_version/libpod/images/*path", get(any(reverse_proxy)))
+        // nest libpod routes
+        .nest("/:api_version/libpod", libpod_router)
         // tracing
         .layer(TraceLayer::new_for_http());
 
