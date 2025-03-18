@@ -64,6 +64,7 @@ async fn main() {
         .route("/volumes", post(reverse_proxy))
         .route("/:api_version/libpod/_ping", any(reverse_proxy))
         .route("/:api_version/libpod/info", any(reverse_proxy))
+        .route("/:api_version/libpod/build", any(reverse_proxy))
         .route("/:api_version/libpod/images/*path", any(reverse_proxy))
         // nest libpod routes
         .nest("/:api_version/libpod", libpod_router)
