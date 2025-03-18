@@ -17,6 +17,7 @@ use crate::cri;
 use crate::cri_clients::get_client;
 
 const LOCAL_RUNTIME_HANDLER: &str = "runc";
+const DEFAULT_RUNTIME_HANDLER: &str = "";
 
 impl From<cri::Container> for Container {
     fn from(value: cri::Container) -> Self {
@@ -449,7 +450,10 @@ impl From<SpecGenerator> for cri::ContainerConfig {
 pub async fn container_create_libpod(
     Json(params): Json<SpecGenerator>,
 ) -> (StatusCode, Json<ContainerCreateResponse>) {
-    let pod_sandbox_id = params.pod.clone().unwrap();
+    let pod_sandbox_id = match &params.pod {
+        Some(pod) => pod.clone(),
+        None => create_pod_default(DEFAULT_RUNTIME_HANDLER).await,
+    };
     let config: cri::ContainerConfig = params.into();
 
     create_container_response(config, pod_sandbox_id).await
