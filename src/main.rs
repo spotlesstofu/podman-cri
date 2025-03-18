@@ -37,7 +37,11 @@ async fn main() {
         .route("/pods/create", post(handlers::pod_create_libpod))
         .route("/pods/:name/start", post(handlers::pod_start_libpod))
         .route("/pods/:name/stop", post(handlers::pod_stop_libpod))
-        .route("/pods/:name", delete(handlers::pod_delete_libpod));
+        .route("/pods/:name", delete(handlers::pod_delete_libpod))
+        // forward to podman all the other paths we don't want to handle
+        .route("/_ping", any(reverse_proxy))
+        .route("/info", any(reverse_proxy))
+        .route("/images/*path", get(any(reverse_proxy)));
 
     let app = Router::new()
         // compat containers routes
@@ -58,8 +62,6 @@ async fn main() {
         // forward to podman all the other paths we don't want to handle
         .route("/events", any(reverse_proxy))
         .route("/volumes", post(reverse_proxy))
-        .route("/:api_version/libpod/info", any(reverse_proxy))
-        .route("/:api_version/libpod/images/*path", get(any(reverse_proxy)))
         // nest libpod routes
         .nest("/:api_version/libpod", libpod_router)
         // tracing
