@@ -1,4 +1,8 @@
 use axum::{
+    extract::Request,
+    http::HeaderValue,
+    middleware::{self, Next},
+    response::Response,
     routing::{any, delete, get, post},
     Router,
 };
@@ -63,11 +67,22 @@ async fn main() {
         .route("/:api_version/libpod/images/*path", any(reverse_proxy))
         // nest libpod routes
         .nest("/:api_version/libpod", libpod_router)
-        // tracing
+        // modify headers
+        .layer(middleware::from_fn(modify_headers))
+        //tracing
         .layer(TraceLayer::new_for_http());
 
     let path = std::env::var("PODMAN_CRI_ENDPOINT")
         .unwrap_or("/run/user/1000/podman/podman-cri.sock".into());
 
     serve(app, path).await;
+}
+
+/// modify_headers forces the `Content-Type` header to be `application/json`.
+/// This makes the app more tolerant to clients using the wrong content type.
+async fn modify_headers(mut request: Request, next: Next) -> Response {
+    request
+        .headers_mut()
+        .insert("Content-Type", HeaderValue::from_static("application/json"));
+    next.run(request).await
 }
