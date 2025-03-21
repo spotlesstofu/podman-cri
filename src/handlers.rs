@@ -9,8 +9,9 @@ use uuid::Uuid;
 
 use podman_api::models::{
     Config, Container, ContainerCreateResponse, ContainerJson, ContainerState,
-    CreateContainerConfig, Health, IdResponse, ListContainer, ListPodContainer, ListPodsReport,
-    Mount, PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport, SpecGenerator,
+    CreateContainerConfig, Health, IdResponse, ImageVolume, ListContainer, ListPodContainer,
+    ListPodsReport, Mount, PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport,
+    SpecGenerator,
 };
 
 use crate::cri;
@@ -269,6 +270,21 @@ impl From<(String, Object)> for cri::Mount {
     }
 }
 
+impl From<ImageVolume> for cri::Mount {
+    fn from(value: ImageVolume) -> Self {
+        let image = cri::ImageSpec {
+            image: value.source.expect("mount source"),
+            ..Default::default()
+        };
+
+        cri::Mount {
+            image: Some(image),
+            container_path: value.destination.expect("mount target"),
+            ..Default::default()
+        }
+    }
+}
+
 impl From<String> for cri::KeyValue {
     fn from(env: String) -> Self {
         let (key, value) = env.split_once('=').expect("env key/value delimiter");
@@ -421,6 +437,20 @@ impl From<SpecGenerator> for cri::ContainerConfig {
             ..Default::default()
         };
 
+        let image_mounts_iter = value
+            .image_volumes
+            .unwrap_or_default()
+            .into_iter()
+            .map(|image_volume| -> cri::Mount { image_volume.into() });
+
+        let mounts_iter = value
+            .mounts
+            .unwrap_or_default()
+            .into_iter()
+            .map(|item| -> cri::Mount { item.into() });
+
+        let mounts: Vec<cri::Mount> = mounts_iter.chain(image_mounts_iter).collect();
+
         cri::ContainerConfig {
             metadata: Some(metadata),
             image: Some(image_spec),
@@ -433,12 +463,7 @@ impl From<SpecGenerator> for cri::ContainerConfig {
                 .into_iter()
                 .map(|(key, value)| cri::KeyValue { key, value })
                 .collect(),
-            mounts: value
-                .mounts
-                .unwrap_or_default()
-                .into_iter()
-                .map(|item| -> cri::Mount { item.into() })
-                .collect(),
+            mounts,
             labels: value.labels.unwrap_or_default(),
             annotations: value.annotations.unwrap_or_default(),
             ..Default::default()
