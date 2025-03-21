@@ -36,6 +36,8 @@ async fn main() {
             "/containers/create",
             post(handlers::container_create_libpod),
         )
+        .route("/containers/:name/start", post(handlers::container_start))
+
         // libpod pods routes
         .route("/pods/json", get(handlers::pod_list_libpod))
         .route("/pods/create", post(handlers::pod_create_libpod))
