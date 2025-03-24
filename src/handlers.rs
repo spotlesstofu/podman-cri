@@ -1,4 +1,3 @@
-use axum::response::IntoResponse;
 use futures::future;
 use podman_api::types::Object;
 use std::collections::HashMap;
@@ -204,23 +203,6 @@ pub async fn container_inspect(
     }
 }
 
-pub struct TonicStatusWrapper {
-    status: tonic::Status,
-}
-
-impl From<tonic::Status> for TonicStatusWrapper {
-    fn from(status: tonic::Status) -> Self {
-        Self { status }
-    }
-}
-
-impl IntoResponse for TonicStatusWrapper {
-    fn into_response(self) -> axum::response::Response {
-        let message = self.status.message().to_owned();
-        axum::response::Response::new(message.into())
-    }
-}
-
 async fn start_container(container_id: String) -> Result<(), tonic::Status> {
     let client = get_client();
     let request = cri::StartContainerRequest { container_id };
@@ -228,10 +210,10 @@ async fn start_container(container_id: String) -> Result<(), tonic::Status> {
     Ok(())
 }
 
-pub async fn container_start(Path(name): Path<String>) -> Result<StatusCode, TonicStatusWrapper> {
-    start_container(name).await?;
+pub async fn container_start(Path(name): Path<String>) -> StatusCode {
+    start_container(name).await.unwrap();
 
-    Ok(StatusCode::NO_CONTENT)
+    StatusCode::NO_CONTENT
 }
 
 // POST
