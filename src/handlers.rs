@@ -210,7 +210,8 @@ async fn start_container(container_id: String) -> Result<(), tonic::Status> {
     Ok(())
 }
 
-pub async fn container_start(Path(name): Path<String>) -> StatusCode {
+pub async fn container_start(Path(params): Path<HashMap<String, String>>) -> StatusCode {
+    let name = params.get("name").expect("container id").to_string();
     start_container(name).await.unwrap();
 
     StatusCode::NO_CONTENT
@@ -586,7 +587,8 @@ pub async fn pod_create_libpod(
 }
 
 /// Start all containers in a pod.
-pub async fn pod_start_libpod(Path(name): Path<String>) -> Json<PodStartReport> {
+pub async fn pod_start_libpod(Path(params): Path<HashMap<String, String>>) -> Json<PodStartReport> {
+    let name = params.get("name").expect("container id").to_string();
     let filter_state = cri::ContainerStateValue {
         state: cri::ContainerState::ContainerCreated.into(),
     };
@@ -626,7 +628,8 @@ pub async fn pod_start_libpod(Path(name): Path<String>) -> Json<PodStartReport> 
 }
 
 /// pod_stop_libpod responds to POST `/libpod/pods/:name/stop`.
-pub async fn pod_stop_libpod(Path(name): Path<String>) -> Json<PodStopReport> {
+pub async fn pod_stop_libpod(Path(params): Path<HashMap<String, String>>) -> Json<PodStopReport> {
+    let name = params.get("name").expect("container id").to_string();
     let client = get_client();
     let request = Request::new(cri::StopPodSandboxRequest {
         pod_sandbox_id: name.clone(),
@@ -646,7 +649,8 @@ pub async fn pod_stop_libpod(Path(name): Path<String>) -> Json<PodStopReport> {
 }
 
 /// pod_delete_libpod responds to DELETE `/libpod/pods/:name`.
-pub async fn pod_delete_libpod(Path(name): Path<String>) -> Json<PodRmReport> {
+pub async fn pod_delete_libpod(Path(params): Path<HashMap<String, String>>) -> Json<PodRmReport> {
+    let name = params.get("name").expect("container id").to_string();
     let client = get_client();
     let request = Request::new(cri::RemovePodSandboxRequest {
         pod_sandbox_id: name.clone(),
