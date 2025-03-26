@@ -449,6 +449,7 @@ impl From<SpecGenerator> for cri::ContainerConfig {
             mounts,
             labels: value.labels.unwrap_or_default(),
             annotations: value.annotations.unwrap_or_default(),
+            tty: value.terminal.unwrap_or(false),
             ..Default::default()
         }
     }
