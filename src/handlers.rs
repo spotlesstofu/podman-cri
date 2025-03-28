@@ -406,6 +406,17 @@ pub async fn container_create(
     create_container_response(config, pod_sandbox_id).await
 }
 
+impl From<podman_api::models::LinuxDevice> for cri::Device {
+    fn from(value: podman_api::models::LinuxDevice) -> Self {
+        let path = value.path.expect("device path");
+        cri::Device {
+            container_path: path.clone(),
+            host_path: path,
+            permissions: "rw".to_string(),
+        }
+    }
+}
+
 impl From<SpecGenerator> for cri::ContainerConfig {
     fn from(value: SpecGenerator) -> Self {
         let metadata = cri::ContainerMetadata {
@@ -450,6 +461,12 @@ impl From<SpecGenerator> for cri::ContainerConfig {
             labels: value.labels.unwrap_or_default(),
             annotations: value.annotations.unwrap_or_default(),
             tty: value.terminal.unwrap_or(false),
+            devices: value
+                .devices
+                .unwrap_or_default()
+                .into_iter()
+                .map(|item| item.into())
+                .collect(),
             ..Default::default()
         }
     }
