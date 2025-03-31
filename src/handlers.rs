@@ -8,9 +8,9 @@ use uuid::Uuid;
 
 use podman_api::models::{
     Config, Container, ContainerCreateResponse, ContainerJson, ContainerState,
-    CreateContainerConfig, Health, IdResponse, ImageVolume, ListContainer, ListPodContainer,
-    ListPodsReport, Mount, PodRmReport, PodSpecGenerator, PodStartReport, PodStopReport,
-    SpecGenerator,
+    CreateContainerConfig, Health, IdResponse, ImageVolume, InspectContainerData,
+    InspectContainerState, ListContainer, ListPodContainer, ListPodsReport, Mount, PodRmReport,
+    PodSpecGenerator, PodStartReport, PodStopReport, SpecGenerator,
 };
 
 use crate::cri;
@@ -200,6 +200,92 @@ pub async fn container_inspect(
     let container: ContainerJson = status.into();
     Ok(Json(container))
 }
+
+impl From<cri::ContainerStatus> for InspectContainerState {
+    fn from(value: cri::ContainerStatus) -> Self {
+        Self {
+            cgroup_path: None,
+            checkpoint_log: None,
+            checkpoint_path: None,
+            checkpointed: None,
+            checkpointed_at: None,
+            conmon_pid: None,
+            dead: None,
+            error: None,
+            exit_code: None,
+            finished_at: None,
+            health: None,
+            oom_killed: None,
+            oci_version: None,
+            paused: None,
+            pid: None,
+            restarting: None,
+            restore_log: None,
+            restored: None,
+            restored_at: None,
+            running: None,
+            started_at: None,
+            status: None,
+            stopped_by_user: None,
+        }
+    }
+}
+
+impl From<cri::ContainerStatus> for InspectContainerData {
+    fn from(value: cri::ContainerStatus) -> Self {
+        // let state: InspectContainerState = value.clone().into();
+
+        Self {
+            id: Some(value.id),
+            image: value.image.map(|image| image.image),
+            app_armor_profile: None,
+            args: None,
+            bounding_caps: None,
+            config: None,
+            conmon_pid_file: None,
+            created: None,
+            dependencies: None,
+            driver: None,
+            effective_caps: None,
+            exec_ids: None,
+            graph_driver: None,
+            host_config: None,
+            hostname_path: None,
+            hosts_path: None,
+            image_digest: None,
+            image_name: None,
+            is_infra: None,
+            is_service: None,
+            kube_exit_code_propagation: None,
+            mount_label: None,
+            mounts: None,
+            name: None,
+            namespace: None,
+            network_settings: None,
+            oci_config_path: None,
+            oci_runtime: None,
+            path: None,
+            pid_file: None,
+            pod: None,
+            process_label: None,
+            resolv_conf_path: None,
+            restart_count: None,
+            rootfs: None,
+            size_root_fs: None,
+            size_rw: None,
+            state: None,
+            static_dir: None,
+            lock_number: None,
+        }
+    }
+}
+
+pub async fn container_inspect_libpod(
+    Path(name): Path<String>,
+) -> Result<Json<InspectContainerData>, StatusCode> {
+    let status = container_status(name).await?;
+    let container: InspectContainerData = status.into();
+    Ok(Json(container))
 }
 
 async fn start_container(container_id: String) -> Result<(), tonic::Status> {
