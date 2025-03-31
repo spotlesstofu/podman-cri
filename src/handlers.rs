@@ -194,8 +194,9 @@ pub async fn container_status(container_id: String) -> Result<cri::ContainerStat
 }
 
 pub async fn container_inspect(
-    Path(name): Path<String>,
+    Path(params): Path<HashMap<String, String>>,
 ) -> Result<Json<ContainerJson>, StatusCode> {
+    let name = params.get("name").expect("container id").to_string();
     let status = container_status(name).await?;
     let container: ContainerJson = status.into();
     Ok(Json(container))
@@ -281,8 +282,9 @@ impl From<cri::ContainerStatus> for InspectContainerData {
 }
 
 pub async fn container_inspect_libpod(
-    Path(name): Path<String>,
+    Path(params): Path<HashMap<String, String>>,
 ) -> Result<Json<InspectContainerData>, StatusCode> {
+    let name = params.get("name").expect("container id").to_string();
     let status = container_status(name).await?;
     let container: InspectContainerData = status.into();
     Ok(Json(container))
