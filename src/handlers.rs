@@ -133,7 +133,6 @@ impl From<cri::Container> for ListContainer {
             id: Some(container.id.clone()),
             image: Some(container.image_ref.clone()),
             image_id: Some(container.image_id.clone()),
-            created: chrono::DateTime::from_timestamp(container.created_at / 1_000_000, 0),
             created_at: Some(container.created_at.to_string()),
             state: Some(state_to_string(container.state())),
             labels: Some(container.labels),
