@@ -461,6 +461,7 @@ impl From<SpecGenerator> for cri::ContainerConfig {
             labels: value.labels.unwrap_or_default(),
             annotations: value.annotations.unwrap_or_default(),
             tty: value.terminal.unwrap_or(false),
+            stdin: value.stdin.unwrap_or(false),
             devices: value
                 .devices
                 .unwrap_or_default()
