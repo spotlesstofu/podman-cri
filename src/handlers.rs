@@ -175,7 +175,7 @@ pub async fn container_list() -> Json<Vec<Container>> {
     Json(podman_containers)
 }
 
-pub async fn container_status(container_id: String) -> Option<cri::ContainerStatus> {
+pub async fn container_status(container_id: String) -> Result<cri::ContainerStatus, StatusCode> {
     let request = cri::ContainerStatusRequest {
         container_id,
         verbose: false,
@@ -186,21 +186,20 @@ pub async fn container_status(container_id: String) -> Option<cri::ContainerStat
         .container_status(request)
         .await
         .unwrap();
-    response.into_inner().status
+
+    match response.into_inner().status {
+        Some(status) => Ok(status),
+        None => Err(StatusCode::NOT_FOUND),
+    }
 }
 
 pub async fn container_inspect(
     Path(name): Path<String>,
 ) -> Result<Json<ContainerJson>, StatusCode> {
-    let status = container_status(name).await;
-
-    match status {
-        Some(status) => {
-            let container: ContainerJson = status.into();
-            Ok(Json(container))
-        }
-        None => Err(StatusCode::NOT_FOUND),
-    }
+    let status = container_status(name).await?;
+    let container: ContainerJson = status.into();
+    Ok(Json(container))
+}
 }
 
 async fn start_container(container_id: String) -> Result<(), tonic::Status> {
