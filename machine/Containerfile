@@ -1,9 +1,13 @@
 # Layer on top of the Podman machine image.
+# TODO remove "dnf update cri-o..." below
+#      when updating base image to fedora 42
 FROM quay.io/podman/machine-os:5.5
 
 RUN \
 # Install dependencies.
-rpm-ostree install cri-o containernetworking-plugins kata-containers && \
+dnf -y install cri-o containernetworking-plugins kata-containers && \
+# Use newer version of cri-o to support image mount
+dnf -y update cri-o --releasever=42 && \
 # Enable services.
 systemctl enable crio && \
 # Create directories.
