@@ -7,8 +7,8 @@ use tonic::Request;
 use uuid::Uuid;
 
 use podman_api::models::{
-    Config, Container, ContainerCreateResponse, ContainerJson, ContainerState,
-    CreateContainerConfig, Health, IdResponse, ImageVolume, InspectContainerData,
+    Config, Container, ContainerCreateResponse, ContainerExecRequest, ContainerJson,
+    ContainerState, CreateContainerConfig, Health, IdResponse, ImageVolume, InspectContainerData,
     InspectContainerState, ListContainer, ListPodContainer, ListPodsReport, Mount, PodRmReport,
     PodSpecGenerator, PodStartReport, PodStopReport, SpecGenerator,
 };
@@ -791,4 +791,33 @@ pub async fn version() -> Json<cri::VersionResponse> {
         .unwrap()
         .into_inner();
     Json(response)
+}
+
+pub async fn container_exec_libpod(
+    Path(path_params): Path<HashMap<String, String>>,
+    post_params: Json<ContainerExecRequest>,
+) -> StatusCode {
+    let container_id = path_params.get("name").expect("container id").to_string();
+
+    let request = cri::ExecRequest {
+        container_id,
+        cmd: post_params.cmd.clone().expect("cmd"),
+        tty: post_params.tty.unwrap_or(false),
+        stdin: post_params.attach_stdin.unwrap_or(true),
+        stdout: post_params.attach_stdout.unwrap_or(true),
+        stderr: post_params.attach_stderr.unwrap_or(true),
+    };
+
+    let response = get_client()
+        .await
+        .unwrap()
+        .exec(request)
+        .await
+        .unwrap()
+        .into_inner();
+    let url = response.url;
+
+    StatusCode::CREATED
+
+    // TODO upgrade connection and pipe the `url` websocket to the http stream
 }
