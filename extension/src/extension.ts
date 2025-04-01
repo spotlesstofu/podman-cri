@@ -59,7 +59,14 @@ const startPeerpods = extensionApi.commands.registerCommand('peerpods.onboarding
     ],
     EnvFiles: envFiles,
     Labels: { "peer-pods-service": "true" },
-    Volumes: { "/run/peerpod:/run/peerpod:z": {} },
+    Volumes: {
+      "/root/.ssh/:/root/.ssh/:ro": {},
+      "/run/peerpod:/run/peerpod:z": {},
+      "/run/netns:/run/netns:slave,z": {},
+      "/var/run/netns:/var/run/netns:slave,z": {},
+      "/run/xtables.lock:/run/xtables.lock": {},
+      "/lib/modules:/lib/modules:ro": {}
+    },
     Start: true,
     Detach: true
   }
