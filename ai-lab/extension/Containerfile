@@ -1,0 +1,2 @@
+FROM ghcr.io/containers/podman-desktop-extension-ai-lab:1.6.1
+COPY extension.cjs /extension/dist/extension.cjs

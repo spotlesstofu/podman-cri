@@ -1,0 +1,3 @@
+FROM ghcr.io/containers/podman-desktop-extension-ai-lab-playground-images/ai-lab-playground-chat@sha256:2eb6cd7a4c4f76e54eeb88465281f4ff2a8f7b7e49db893a579a8f6842f69eb1
+
+COPY granite-3.2-8b-instruct-Q4_K_M.gguf /models/granite-3.2-8b-instruct-Q4_K_M.gguf
