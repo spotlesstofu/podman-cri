@@ -16,7 +16,7 @@ use podman_api::models::{
 use crate::cri;
 use crate::cri_clients::get_client;
 
-const LOCAL_RUNTIME_HANDLER: &str = "runc";
+const LOCAL_RUNTIME_HANDLER: &str = "crun";
 const DEFAULT_RUNTIME_HANDLER: &str = "";
 
 impl From<cri::Container> for Container {
